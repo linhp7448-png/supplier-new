@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8"><title>Gemini Model Tester</title>
+<style>body{font-family:sans-serif;padding:20px;max-width:700px}
+button{padding:8px 16px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:4px}
+button:hover{background:#1557b0}
+.ok{color:green;font-weight:700} .err{color:red} .loading{color:gray}
+#log{margin-top:16px;border:1px solid #ddd;border-radius:8px;padding:12px;min-height:100px;white-space:pre-wrap;font-family:monospace;font-size:13px}
+input{width:100%;padding:8px;font-size:14px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
+</style>
+</head>
+<body>
+<h2>🔍 Gemini Model Tester</h2>
+<p>Nhập API key và bấm Test để tìm model nào đang hoạt động:</p>
+<input id="key" type="password" placeholder="Dán Gemini API key vào đây (AIzaSy...)">
+<br><br>
+<button onclick="runTest()">▶ Test tất cả models</button>
+<button onclick="document.getElementById('log').textContent=''">Xóa log</button>
+<div id="log">Chưa chạy...</div>
+
+<script>
+const MODELS = [
+  {n:'gemini-2.5-flash',  v:'v1beta'},
+  {n:'gemini-2.5-flash',  v:'v1'},
+  {n:'gemini-2.5-pro',    v:'v1beta'},
+  {n:'gemini-2.5-pro',    v:'v1'},
+  {n:'gemini-2.0-flash',  v:'v1beta'},
+  {n:'gemini-2.0-flash',  v:'v1'},
+  {n:'gemini-2.0-flash-lite', v:'v1beta'},
+  {n:'gemini-2.0-flash-lite', v:'v1'},
+  {n:'gemini-1.5-flash',  v:'v1beta'},
+  {n:'gemini-1.5-flash',  v:'v1'},
+  {n:'gemini-1.5-pro',    v:'v1beta'},
+  {n:'gemini-1.5-pro',    v:'v1'},
+  {n:'gemini-pro',        v:'v1beta'},
+];
+
+const log = document.getElementById('log');
+
+function write(msg) {
+  log.textContent += msg + '\n';
+}
+
+async function testModel(key, model, apiVer) {
+  const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${key}`;
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [{text: 'Say "OK" in one word.'}]}],
+        generationConfig: {maxOutputTokens: 10}
+      })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const msg = (data.error && data.error.message) || ('HTTP ' + resp.status);
+      return {ok: false, msg};
+    }
+    const text = ((data.candidates?.[0]?.content?.parts)||[]).map(p=>p.text||'').join('').trim();
+    return {ok: true, msg: text || '(empty)'};
+  } catch(e) {
+    return {ok: false, msg: e.message};
+  }
+}
+
+async function runTest() {
+  const key = document.getElementById('key').value.trim();
+  if (!key) { write('❌ Nhập API key trước!'); return; }
+  log.textContent = '';
+  write('=== BẮT ĐẦU TEST ' + MODELS.length + ' MODELS ===\n');
+  
+  for (const m of MODELS) {
+    write(`⏳ Testing ${m.n} (${m.v})...`);
+    const r = await testModel(key, m.n, m.v);
+    // Xóa dòng loading
+    const lines = log.textContent.trimEnd().split('\n');
+    lines.pop();
+    log.textContent = lines.join('\n') + '\n';
+    if (r.ok) {
+      write(`✅ OK: ${m.n} (${m.v}) → "${r.msg}"`);
+    } else {
+      write(`❌ FAIL: ${m.n} (${m.v}) → ${r.msg}`);
+    }
+    await new Promise(r => setTimeout(r, 300)); // tránh rate limit
+  }
+  write('\n=== XONG ===');
+}
+</script>
+</body>
+</html>

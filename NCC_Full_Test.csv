@@ -1,0 +1,58 @@
+Trường thông tin,Giá trị,Ghi chú
+--- THÔNG TIN CHUNG ---,,
+Tên NCC,CÔNG TY TNHH CÔNG NGHỆ VÀ GIẢI PHÁP TƯƠNG LAI,Tên đầy đủ theo GPKD
+Mã số thuế (MST),0109998866,10 chữ số
+MST mẹ (chi nhánh),0109998887,MST công ty mẹ nếu là chi nhánh
+Nhóm hàng/dịch vụ,Phần mềm quản trị doanh nghiệp,Nhóm NCC
+Loại NCC,Goods,Goods / Service / Distributor / Contractor / Freelancer
+Phân khúc NCC,Strategic,Strategic / Preferred / Approved / Media / Transactional
+Quan hệ,Spend_Authorized,Spend_Authorized / Approved / Disqualified
+Người đại diện pháp luật,Trần Văn Trí,Tên NDDPL trên GPKD
+Chức vụ người đại diện,Tổng Giám Đốc,Chức danh chính thức
+Website,https://tuonglaicorp.vn,Website công ty
+--- ĐỊA CHỈ & GPKD ---,,
+Địa chỉ giao dịch,"Tầng 12, Tòa nhà Sunrise, 25 Nguyễn Hữu Thọ, Quận 7, TP. Hồ Chí Minh",Địa chỉ đầy đủ
+Số GPKD / Số đăng ký KD,0109998887,Số trên giấy phép KD
+Ngày cấp GPKD lần đầu,15/05/2020,Ngày thành lập / cấp phép lần đầu
+Tiền tệ thanh toán,VND,VND / USD / EUR
+Bản đồ (Map URL),https://maps.google.com/?q=25+Nguyen+Huu+Tho+Quan+7+HCMC,Link Google Maps
+--- NGƯỜI LIÊN HỆ ---,,
+Vai trò liên hệ 1,PIC,PIC / Director / Finance / Legal / Other
+Họ tên liên hệ 1,Nguyễn Thị Lan,Người liên hệ chính
+Email liên hệ 1,lan.nguyen@tuonglaicorp.vn,Email bắt buộc
+SĐT liên hệ 1,0901234567,Số điện thoại
+Vai trò liên hệ 2,Finance,Người phụ trách kế toán
+Họ tên liên hệ 2,Lê Minh Tài,Người liên hệ thứ 2
+Email liên hệ 2,tai.le@tuonglaicorp.vn,Email kế toán
+SĐT liên hệ 2,0912345678,SĐT kế toán
+--- HẠCH TOÁN (ĐẨY NAV) ---,,
+Vendor Posting Group,GENERAL,Mã nhóm hạch toán
+Gen. Bus. Posting Group,DOMESTIC,DOMESTIC / FOREIGN
+VAT Bus. Posting Group,VAT8,VAT8 / VAT10 / NONVAT
+Payment Term,NET30,NET30 / NET45 / NET60 / COD / Khác
+--- TÀI CHÍNH & RỦI RO ---,,
+Vốn điều lệ (VND),25000000000,25 tỷ VNĐ - chỉ nhập số
+Tổng mua hàng YTD (VND),3500000000,3.5 tỷ trong năm nay
+--- SẢN PHẨM & DỊCH VỤ ---,,
+Sản phẩm / dịch vụ cung cấp,"Phần mềm ERP, phần mềm quản lý kho, triển khai hệ thống IT",Mô tả sản phẩm dịch vụ chính
+Khách hàng tiêu biểu,"Vingroup, Masan, TH True Milk",Ít nhất 1 khách hàng
+Nhà thầu phụ / sub-supplier,"Công ty ABC Tech, Freelancer Nguyễn Văn B",Các sub-supplier nếu có
+Số nhân viên (Headcount),150,Số lao động hiện tại
+--- ĐÁNH GIÁ & ĐẤU THẦU ---,,
+Supplier Assessment (SA),TRUE,TRUE nếu đã đánh giá / FALSE nếu chưa
+Số SA,SA-2025-042,Mã số biên bản đánh giá
+Ngày đánh giá SA,20/03/2025,Ngày thực hiện đánh giá
+Điểm SA (%),82,Điểm từ 0-100
+Xếp hạng SA,Approved (75-90%),Approved (75-90%) / Conditional (60-75%) / Not Approved (<60%)
+Mục đích đánh giá SA,Đánh giá lại,Đánh giá mới / Đánh giá lại / Đánh giá hàng năm
+Tender Evaluation (TE),TRUE,TRUE nếu đã qua đấu thầu
+Số TE,TE-2025-018,Mã số biên bản đấu thầu
+Loại hợp đồng,Hợp đồng dịch vụ,Hợp đồng nguyên tắc / mua bán / dịch vụ / khác
+--- NGÂN HÀNG ---,,
+Ngân hàng,Vietcombank,Tên ngân hàng
+Chi nhánh ngân hàng,Chi nhánh Quận 7 TP.HCM,Chi nhánh cụ thể
+Số tài khoản,1234567890123,Chỉ nhập số
+Chủ tài khoản,CÔNG TY TNHH CÔNG NGHỆ VÀ GIẢI PHÁP TƯƠNG LAI,Nên trùng tên NCC
+--- CHỨNG CHỈ & TUÂN THỦ ---,,
+Tình trạng MST,Đang hoạt động,Tình trạng doanh nghiệp theo Tổng cục Thuế
+Portal Email NCC,supplier@tuonglaicorp.vn,Email đăng nhập Supplier Portal (nếu có)

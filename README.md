@@ -7,7 +7,12 @@ Supabase (Postgres + Auth + Storage). Không cần build step.
 ```
 public/index.html        App (UI Navision-style, wire supabase-js v2 qua CDN)
 public/env.example.js    Mẫu cấu hình → copy thành env.js
-supabase/migrations/0001_init.sql   Schema + RLS + storage bucket
+supabase/migrations/0001_init.sql   Supplier + legacy SCM schema
+supabase/migrations/0002_add_fields.sql   Supplier fields
+supabase/migrations/0003_item_management.sql   Canonical Item Management + RLS
+supabase/migrations/0004_item_management_backfill.sql   Idempotent GALAXY backfill
+supabase/migrations/0005_item_workflow.sql   Item request/approval/image/replacement workflow
+supabase/migrations/0006_downstream_sync.sql   NAV/Vista crosswalk + transactional outbox
 supabase/seed.sql        17 NCC mẫu + 4.527 MST nợ thuế
 vercel.json              Cấu hình host tĩnh (outputDirectory = public)
 ```
@@ -19,6 +24,23 @@ vercel.json              Cấu hình host tĩnh (outputDirectory = public)
    - Bật RLS (chỉ user đăng nhập truy cập) + tạo bucket Storage `vendor-docs`.
 3. SQL Editor → dán `supabase/seed.sql` → **Run** (nạp NCC mẫu + danh sách nợ thuế).
    - File ~200KB; nếu editor báo quá lớn, chia làm 2 lần chạy (phần vendor, rồi phần registry).
+
+### Bật Item Management hợp nhất
+
+Chạy migration theo đúng thứ tự `0001` → `0002` → `0003` → `0004` → `0005` → `0006`.
+
+- `0003` tạo canonical Item, Sub Item, Supplier Offer, Offer–Location, Product Content/Image và lineage.
+- `0004` backfill trực tiếp từ `raw_data`; không có bước import file từ giao diện.
+- `0005` tạo RPC submit/approve/reject, idempotency, ảnh Product Content và lịch sử thay thế Sub Item.
+- `0006` tạo field mapping, crosswalk và transactional outbox cho NAV2017/Vista. Migration không chứa credential và không tự gọi API downstream.
+- `raw_data` được giữ nguyên làm bằng chứng legacy và có thể chạy lại `0004` an toàn.
+- Sau khi chạy, kiểm tra `select * from mdm_item_reconciliation;`.
+- Phải seed ít nhất một email `Admin` vào `app_role` bằng SQL Editor/service role trước khi quản trị master data. Không đưa service-role key vào frontend.
+
+Reconciliation dry-run trên bộ dữ liệu GALAXY nằm tại `PHASE2_RECONCILIATION.md`.
+Workflow/role matrix Phase 3 nằm tại `PHASE3_WORKFLOW.md`.
+Contract và runbook Phase 4 nằm tại `PHASE4_DOWNSTREAM.md`.
+Staging preflight/UAT matrix Phase 5 nằm tại `PHASE5_UAT.md`.
 
 ## Bước 2 — Tạo user đăng nhập
 Authentication → **Users** → Add user (email + password). App dùng email/password.
@@ -73,5 +95,5 @@ dùng key Gemini free-tier / giới hạn riêng cho việc này, không dùng c
 - Đính kèm hồ sơ NCC → Supabase Storage (`vendor-docs`).
 
 ## Còn thiếu (bước sau)
-- Đẩy dữ liệu xuống Nav/Vista qua API: dùng bảng field-mapping đã dựng (G-ERP → Nav → Vista).
-- Module Item/BOM: cần crosswalk **Vista numeric ItemId ↔ HO code** trước khi ráp.
+- Cấu hình worker/adapter bằng specification và credential thật của NAV2017/Vista. Frontend không giữ credential downstream.
+- Chạy UAT migration `0006`, xác minh crosswalk và đối soát payload trước khi bật worker dispatch.

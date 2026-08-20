@@ -1,0 +1,13 @@
+{
+  "name": "g-erp-supplier-management",
+  "private": true,
+  "scripts": {
+    "test": "node tests/phase1-smoke.cjs && node tests/phase2-canonical.cjs && node tests/phase3-workflow.cjs && node tests/phase4-downstream.cjs && node tests/phase5-release.cjs && node tests/product-loader.cjs",
+    "test:phase1": "node tests/phase1-smoke.cjs",
+    "test:phase2": "node tests/phase2-canonical.cjs",
+    "test:phase3": "node tests/phase3-workflow.cjs",
+    "test:phase4": "node tests/phase4-downstream.cjs",
+    "test:phase5": "node tests/phase5-release.cjs",
+    "test:product-loader": "node tests/product-loader.cjs"
+  }
+}

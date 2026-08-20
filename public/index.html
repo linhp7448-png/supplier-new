@@ -2764,8 +2764,41 @@
       background: #fff;
       max-width: 190px
     }
+
+    .imsearchgrid { display:grid; gap:10px; margin-top:12px }
+    .imsearchcard { width:100%; border:1px solid #dce3ec; background:#fff; border-radius:10px; padding:10px; display:grid; grid-template-columns:72px 1fr auto; gap:12px; align-items:center; text-align:left; cursor:pointer; color:inherit }
+    .imsearchcard:hover { border-color:#2b6cb0; box-shadow:0 5px 18px rgba(43,108,176,.09) }
+    .imsearchimg,.imsearchhero { display:flex; align-items:center; justify-content:center; background:#f4f6f8; border:1px solid #e1e5eb; border-radius:8px; overflow:hidden; color:#8b96a8; font-size:10px }
+    .imsearchimg { width:72px; height:64px }
+    .imsearchimg img,.imsearchhero img { width:100%; height:100%; object-fit:contain }
+    .imsearchbody { display:flex; min-width:0; flex-direction:column; gap:3px }
+    .imsearchbody b { font-size:14px }
+    .imsearchbody small,.imsearchbody em { color:var(--muted); font-size:11px; font-style:normal }
+    .imsearchcard>strong { color:var(--blue); font-size:11px; white-space:nowrap }
+    .imsearchdetail { width:min(1040px,94vw); max-width:1040px; max-height:90vh }
+    .imsearchitemmeta { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px }
+    .imsearchitemmeta span { background:#f4f7fa; border:1px solid #e0e5ec; border-radius:7px; padding:7px 9px; font-size:11px }
+    .imsearchvariant { border:1px solid #dce3ec; border-radius:10px; padding:12px; margin:10px 0 }
+    .imsearchvarianthead { display:grid; grid-template-columns:110px 1fr; gap:13px; align-items:center; margin-bottom:10px }
+    .imsearchhero { width:110px; height:96px }
+    .imsearchvariant h3 { margin:4px 0; font-size:15px }
+    .imsearchvariant p,.imsearchvariant small { margin:0; color:var(--muted); font-size:11px }
+    .imsearchgallery { display:flex; gap:7px; overflow:auto; margin:8px 0 10px; padding-bottom:3px }
+    .imsearchgallery img { width:64px; height:56px; object-fit:contain; border:1px solid #dce3ec; border-radius:7px; background:#fff }
+    .imreplaceinfo { margin:8px 0; padding:8px 10px; background:#fff7df; border:1px solid #ead394; border-radius:7px; font-size:11px }
+    .imworkflowmode { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px }
+    .imworkflowmode button { border:1px solid #d7dde6; background:#fff; border-radius:7px; padding:7px 9px; font-size:11px; cursor:pointer }
+    .imworkflowmode button.on { background:#eaf2fb; border-color:#2b6cb0; color:#1f5793; font-weight:700 }
+    .imworkflowlock { background:#fff7df; border:1px solid #ead394; border-radius:7px; padding:8px 10px; margin-bottom:10px; font-size:11px }
+    .imimagefiles { color:var(--muted); font-size:10px; margin-top:4px }
+    .imexistingimages { border:1px solid #dce3ec; border-radius:9px; padding:9px; margin-bottom:10px }
+    .imexistingimages>b,.imexistingimages>small { display:block; font-size:11px }
+    .imexistingimages>small { color:var(--muted); margin:2px 0 8px }
+    .imexistingimages>div { display:flex; gap:8px; overflow:auto }
+    .imexistingimages label { min-width:110px; border:1px solid #e0e5ec; border-radius:7px; padding:5px; font-size:10px; font-weight:400 }
+    .imexistingimages img { width:98px; height:70px; object-fit:contain; display:block; background:#f5f6f8; border-radius:5px; margin-bottom:4px }
+    .imexistingimages span { display:block; margin-top:3px }
   </style>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -2914,8 +2947,12 @@
 
   <!-- SheetJS cho tính năng Import file Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- DEMO MODE: mock Supabase client (offline, real seed data) -->
-  <script>window.__ENV__ = { SUPABASE_URL: 'https://qwzmnfzrguffzerbajpw.supabase.co', SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3em1uZnpyZ3VmZnplcmJhanB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MjkzMjYsImV4cCI6MjEwMjAwNTMyNn0.-ZZy4UQkcux7fnqGv3gp2C0YS4OwK0AWeoT1juBKwBg' };</script>
+  <script src="js/item-management/scm-adapter.js"></script>
+  <script src="js/item-management/workflow.js"></script>
+  <script src="js/item-management/loader.js"></script>
+  <script src="js/item-management/search.js"></script>
+  <script src="js/item-management/downstream.js"></script>
+  <script src="env.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const ENV = window.__ENV__ || {};
@@ -3109,6 +3146,7 @@
       im: {
         t: 'Item Management', items: [
           { l: 'Công việc của tôi', v: 'itemmgmt', it: 'work', ic: 'dash', desc: 'Tổng quan các công việc cần xử lý của bạn' },
+          { l: 'Tra cứu sản phẩm', v: 'itemmgmt', it: 'search', ic: 'perf', desc: 'Tra cứu read-only Item, biến thể, ảnh, nhà cung cấp và địa điểm áp dụng' },
           { l: 'Thêm / thay sản phẩm', v: 'itemmgmt', it: 'new', ic: 'box', desc: 'Thêm mới hoặc yêu cầu thay đổi thông tin sản phẩm' },
           { l: 'Sản phẩm hợp nhất (Golden Record)', v: 'itemmgmt', it: 'list', ic: 'perf', desc: 'Danh mục sản phẩm chuẩn đã được làm sạch và hợp nhất' },
           { l: 'Cây phân loại (Category)', v: 'itemmgmt', it: 'category', ic: 'box', desc: 'Quản lý cấu trúc cây danh mục hàng hóa' },
@@ -3127,7 +3165,6 @@
           { l: 'Good Receive', dis: 1, ic: 'box', desc: 'Quản lý phiếu nhập kho' },
           { l: 'Good Return', dis: 1, ic: 'box', desc: 'Quản lý phiếu trả hàng' },
           { l: '3-Way Matching', dis: 1, ic: 'reel', desc: 'Đối chiếu 3 bước (PO - GR - Hóa đơn)' },
-          { l: 'Quản lý mặt hàng (ảnh SP)', v: 'items', ic: 'box', desc: 'Quản lý hình ảnh và chi tiết mặt hàng lúc giao nhận' },
           { l: 'Quy định giao nhận', v: 'dloc', ic: 'dloc', desc: 'Quy định và vị trí giao nhận' }
         ]
       }
@@ -3412,7 +3449,7 @@
     /* ---------- toolbar ---------- */
     function toolbar() {
       const v = DB.find(x => x.id === st.selId);
-      if (st.view === 'itemmgmt') { var _tt = { work: 'Công việc của tôi', new: 'Thêm / thay sản phẩm', list: 'Sản phẩm hợp nhất', category: 'Cây phân loại', journey: 'Data Journey', control: 'Kiểm soát & ngoại lệ', rules: 'Rules & Principles' }[st.itemtab || 'work'] || ''; var _showAdd = ['work', 'list', 'new'].includes(st.itemtab || 'work'); $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Item Management — ' + _tt + '</div>' + (_showAdd ? '<button class="tbtn pri" style="margin-left:12px" onclick="imSmartOpen()">+ Thêm / thay sản phẩm</button>' : '') + (st.itemtab === 'list' ? '<button class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4" onclick="document.getElementById(\'scmFileInput\').click()">📥 Nhập SCM từ Excel</button>' : '') + '<span class="count">Control by exception · Vista · NAV2017</span>' + imHelpBtn(st.itemtab || 'work'); return; }
+      if (st.view === 'itemmgmt') { var _tt = { work: 'Công việc của tôi', search: 'Tra cứu sản phẩm', new: 'Thêm / thay sản phẩm', list: 'Sản phẩm hợp nhất', category: 'Cây phân loại', journey: 'Data Journey', control: 'Kiểm soát & ngoại lệ', sync: 'Downstream Sync', rules: 'Rules & Principles' }[st.itemtab || 'work'] || ''; var _showAdd = ['work', 'search', 'list', 'new'].includes(st.itemtab || 'work'); $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Item Management — ' + _tt + '</div>' + (_showAdd ? '<button class="tbtn pri" style="margin-left:12px" onclick="imSmartOpen()">+ Thêm / thay sản phẩm</button>' : '') + '<span class="count">Control by exception · Vista · NAV2017</span>' + imHelpBtn(st.itemtab || 'work'); return; }
       if (st.view === 'databank') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Supplier Data Bank</div><button class="tbtn pri" style="margin-left:12px" onclick="openNew(\'Candidate\')">+ Tạo NCC tiềm năng</button><select class="f" id="frel" style="margin-left:8px"><option value="">Mọi quan hệ</option>' + ['Candidate', 'Prospective', 'Disqualified'].map(function (s) { return '<option ' + (st.frel === s ? 'selected' : '') + '>' + s + '</option>'; }).join('') + '</select>'; var fr = $('#frel'); if (fr) fr.onchange = function (e) { st.frel = e.target.value; saveSt(); databankView(); }; return; }
       if (st.view === 'dloc') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Quy định giao nhận (kho rạp)</div><button class="tbtn pri" style="margin-left:12px" onclick="dlocEdit(null)">+ Thêm địa điểm</button>'; return; }
       if (st.view === 'rfq') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">RFQ / So sánh giá</div><button class="tbtn pri" style="margin-left:12px" onclick="rfqNew()">+ Tạo RFQ</button>'; return; }
@@ -3422,7 +3459,6 @@
       if (st.view === 'users') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý người dùng</div>`; return; }
 
       if (st.view === 'inactiveReq') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Đề nghị ngừng hoạt động NCC</div>`; return; }
-      if (st.view === 'items') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý mặt hàng & ảnh sản phẩm</div><input class="f" id="fitem" placeholder="Tìm mã/tên hàng..." style="margin-left:12px;min-width:220px"><button class="tbtn pri" style="margin-left:8px" onclick="itemAdd()">+ Thêm mặt hàng</button>`; setTimeout(function () { var fi = $('#fitem'); if (fi) fi.oninput = function () { itemsRender(this.value); }; }, 0); return; }
       if (st.view === 'promos') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Khuyến mãi / banner cổng NCC</div>`; return; }
       if (st.view === 'po') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Đơn mua (PO)</div><select class="f" id="fpo" style="margin-left:12px"><option value="">Mọi trạng thái</option>' + ['Draft', 'Pending_Approval', 'Sent_to_Supplier', 'Supplier_Confirmed', 'Delivered', 'Supplier_Rejected', 'Rejected'].map(s => '<option ' + (st.postatus === s ? 'selected' : '') + ' value="' + s + '">' + s + '</option>').join('') + '</select>' + (function () { var b = ''; var s = st.postatus; if (!s || s === 'Draft') b += '<button class="tbtn" onclick="poBulk(\'submit\')">Gửi duyệt (chọn)</button>'; if ((!s || s === 'Pending_Approval') && can('approve')) b += '<button class="tbtn pri" onclick="poBulk(\'approve\')">Duyệt (chọn)</button><button class="tbtn" style="color:var(--bad)" onclick="poBulk(\'reject\')">Từ chối (chọn)</button>'; return b ? '<span class="tsep"></span>' + b : ''; })() + '<span class="count">' + POS.length + ' PO</span>'; const fp = $('#fpo'); if (fp) fp.onchange = e => { st.postatus = e.target.value; saveSt(); renderPO(); }; return; }
       const B = (l, fn, dis, pri) => `<button class="tbtn ${pri ? 'pri' : ''}" ${dis ? 'disabled' : ''} onclick="${fn}">${l}</button>`;
@@ -3475,7 +3511,7 @@
     }
 
     function syncAdminUI() { var _aw = document.getElementById('admwrap'); if (_aw) _aw.style.display = (MYROLE === 'Admin') ? '' : 'none'; }
-    function render() { toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'items') itemsView(); else if (st.view === 'po') poView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
+    function render() { if (st.view === 'items') { st.view = 'itemmgmt'; st.itemtab = 'search'; saveSt(); } toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'po') poView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
     function renderList() {
       const rows = sortRows('vendors', DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized' && (!st.fstatus || v.status === st.fstatus) && (!st.fcat || v.cat === st.fcat) && (!st.fseg || v.segment === st.fseg) && (!st.q || [v.code, v.name, v.mst].some(x => (x || '').toLowerCase().includes(st.q.toLowerCase())))));
       const segB = { Strategic: 'b-ok', Preferred: 'b-warn', Approved: 'b-neutral', Media: 'b-warn', Transactional: 'b-neutral' };
@@ -4847,22 +4883,9 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { if (rzOpen) { e.preventDefault(); rzOk(); } else if (cardOpen && form) { e.preventDefault(); if ($('#saveBtn')) save(); } }
     });
 
-    var IMD = null, IMQ = '', IMSOURCE = '';
-    async function itemMgmtView() {
-      st.itemtab = st.itemtab || 'overview';
-      if (!IMD) { $('#content').innerHTML = '<div class="imempty">Đang nạp dữ liệu Item Master…</div>'; try { var r = await fetch('data/fnb-catalog.json'); IMD = await r.json(); } catch (e) { $('#content').innerHTML = '<div class="imempty" style="color:var(--bad)">Không tải được F&B catalog: ' + esc(e.message) + '</div>'; return; } }
-      imRender();
-    }
-    function imTabs() { var a = [['overview', 'Tổng quan'], ['items', 'Item Master'], ['subs', 'Sub Item'], ['content', 'Product Content'], ['uom', 'UOM & Conversion'], ['offers', 'Supplier Offers'], ['requests', 'Item Requests']]; return '<div class="imtabs">' + a.map(function (x) { return '<button class="' + (st.itemtab === x[0] ? 'on' : '') + '" onclick="imTab(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>'; }
-    function imTab(t) { st.itemtab = t; saveSt(); imRender(); }
+    var IMD = null, IMQ = '', IMSOURCE = '', IMCANONICAL = false;
     function imVal(o, k) { var v = o && o[k]; return v === null || v === undefined || v === '' ? '—' : String(v); }
     function imPill(v, c) { return '<span class="impill ' + (c || '') + '">' + esc(imVal({ 'v': v }, 'v')) + '</span>'; }
-    window.imSelected = window.imSelected || {};
-    function imRender() {
-      if (!IMD) return; var root = imTabs(); var t = st.itemtab;
-      if (t === 'overview') root += imOverview(); else if (t === 'items') root += imItems(); else if (t === 'subs') root += imSubs(); else if (t === 'content') root += imContent(); else if (t === 'uom') root += imUom(); else if (t === 'offers') root += imOffers(); else root += imRequests();
-      $('#content').innerHTML = '<div style="padding:14px;min-width:760px">' + root + '</div>';
-    }
     function imOverview() {
       var pend = IMD.items.filter(function (x) { return imVal(x, 'Review Status') !== 'Approved'; }).length; var miss = IMD.subItems.filter(function (x) { return imVal(x, 'Image Status') !== 'Available'; }).length;
       return '<div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:8px;padding:10px 12px;margin-bottom:12px"><b>G-ERP là nguồn master tác giả.</b> BOM dùng Item chức năng; PO/tồn kho dùng Sub Item vật lý. FEFO tự phân bổ theo tồn kho.</div>'
@@ -4975,11 +4998,12 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
         + '<div class="imhhead"><b>📄 ' + esc(x['Sub Item Name'] || code) + '</b><button onclick="imRowClose()" class="imhx">✕ Đóng</button></div>'
         + '<div class="imhbody"><div class="imddetail">' + owner + buy + acc + '</div>'
         + '<div class="imdact">'
-        + '<button class="btn pri" onclick="imRowClose();imTab(\'new\');setTimeout(imSmartOpen,60)">+ Thêm brand/pack cho Item này</button>'
-        + '<button class="btn" onclick="imRowClose();imTab(\'journey\')">Xem trong Data Journey</button>'
-        + '<button class="btn" onclick="imRowClose();imTab(\'control\')">Tới Kiểm soát & ngoại lệ</button>'
+        + '<button class="btn pri" onclick="imRowClose();imSmartOpenForSub(\'' + esc(code) + '\',\'sub_item\')">+ Thêm brand/quy cách</button>'
+        + '<button class="btn" onclick="imRowClose();imSmartOpenForSub(\'' + esc(code) + '\',\'offer\')">+ Supplier Offer</button>'
+        + '<button class="btn" onclick="imRowClose();imSmartOpenForSub(\'' + esc(code) + '\',\'content\')">Cập nhật content/ảnh</button>'
+        + '<button class="btn" style="color:var(--bad)" onclick="imRowClose();imSmartOpenForSub(\'' + esc(code) + '\',\'replace\')">Thay sản phẩm này</button>'
         + '</div>'
-        + '<p style="font-size:11px;color:#68727f;margin:10px 0 0">Đổi NCC/giá → dùng "Thêm brand/pack" hoặc thêm Supplier Offer, KHÔNG tạo Item mới.</p>'
+        + '<p style="font-size:11px;color:#68727f;margin:10px 0 0">Mọi thao tác mở workflow request; không chỉnh trực tiếp Golden Record.</p>'
         + '</div></div></div>';
       var d = document.createElement('div'); d.id = 'imrowwrap'; d.innerHTML = html; document.body.appendChild(d);
     }
@@ -5056,6 +5080,7 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     // ============ BULK INTAKE — nhập nhiều dòng, vẫn qua bộ máy verify + tự sinh mã ============
     var IMBULK = [];
     function imBulkOpen() {
+      if (!window.ItemWorkflow || !window.ItemWorkflow.capabilities(MYROLE, IMCANONICAL).canSubmit) return toast('Bulk intake chỉ khả dụng trên canonical workflow cho Buyer/Admin/Approver.', 1);
       var old = document.getElementById('imbulkwrap'); if (old) old.remove();
       var html = '<div class="imhmask" onclick="imBulkClose(event)"><div class="imhcard" style="max-width:980px" onclick="event.stopPropagation()">'
         + '<div class="imhhead"><b>📋 Nhập nhiều sản phẩm (dán từ Excel)</b><button onclick="imBulkClose()" class="imhx">✕ Đóng</button></div>'
@@ -5116,11 +5141,16 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       for (var i = 0; i < rows.length; i++) {
         var r = rows[i]; r.state = 'running'; imBulkRender();
         try {
+          var bulkVendorCode = window.ItemWorkflow.vendorCode(r.sup, typeof DB !== 'undefined' ? DB : []);
+          var bulkDomain = window.ItemWorkflow.normalizeDomain(r.domain);
+          var bulkCategory = (IMD.categories || []).find(function (category) { return imVal(category, 'Status') === 'Active' && String(category.Domain).toLowerCase() === bulkDomain.toLowerCase(); });
+          if (!bulkCategory) throw new Error('Không có Category Active cho ' + bulkDomain);
           var res = await sb.rpc('mdm_submit_item_intake', {
-            p_requested_name: r.name, p_domain: r.domain, p_item_code: null, p_brand: r.brand,
+            p_requested_name: r.name, p_domain: bulkDomain, p_category_code: bulkCategory['Category Code'], p_item_code: null, p_brand: r.brand,
             p_purchase_uom: r.pu, p_conversion_factor: r.factor, p_base_uom: r.base,
-            p_supplier_note: r.sup || null, p_exact_only: false, p_image_path: null,
-            p_requester: (typeof me !== 'undefined' && me && me.email) ? me.email : 'bulk', p_manufacturer: r.brand
+            p_vendor_code: bulkVendorCode || null, p_supplier_note: r.sup || null, p_exact_only: false, p_image_paths: [],
+            p_requester: (typeof me !== 'undefined' && me && me.email) ? me.email : 'bulk', p_manufacturer: r.brand,
+            p_idempotency_key: window.ItemWorkflow.submissionKey()
           });
           if (res.error) { r.state = 'fail'; r.result = res.error.message; }
           else {
@@ -5412,7 +5442,9 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     // ============ DATA JOURNEY — Second Brain (radial, lineage thật) ============
     var IMJ_RAF = null, IMJ_ZOOM = 1, IMJ_PANX = 0, IMJ_PANY = 0, IMJ_HOVER = null, IMJ_DRAG = null;
     function imJourney() {
-      return ''
+      var sync = imSyncSummary();
+      return '<div class="im2control" style="margin-bottom:12px"><div><span>Outbox</span><b>' + sync.total + '</b></div><div><span>Đang chờ gửi</span><b style="color:var(--blue)">' + sync.waiting + '</b></div><div><span>Đã đồng bộ</span><b style="color:var(--ok)">' + sync.Synced + '</b></div><div><span>Cần xử lý</span><b style="color:' + (sync.needsAttention ? 'var(--bad)' : 'var(--ok)') + '">' + sync.needsAttention + '</b></div></div>'
+        + '<div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px"><b>Luồng vận hành:</b> Request Approved → transactional outbox → crosswalk đã xác minh → adapter service-role → NAV2017/Vista. G-ERP là nguồn chuẩn một chiều; downstream không sửa ngược.</div>'
         + '<div style="background:#0a1120;border:1px solid #1e2a42;border-radius:14px;padding:0;overflow:hidden;position:relative">'
         + '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid #1e2a42;flex-wrap:wrap">'
         + '<div style="font-weight:800;color:#e8ecf4;font-size:15px">🧠 Data Journey — Bộ não dữ liệu G-ERP</div>'
@@ -5779,37 +5811,42 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     async function imDeleteSelected() {
       var toDelete = Object.keys(window.imSelected).filter(k => window.imSelected[k]);
       if (toDelete.length === 0) return;
-      if (!confirm("Bạn có chắc muốn xóa " + toDelete.length + " sản phẩm đã chọn? Dữ liệu SCM sẽ bị xóa vĩnh viễn khỏi Database!")) return;
-      
+      var selected = (IMD && IMD.subItems ? IMD.subItems : []).filter(function (item) { return toDelete.includes(item['Sub Item Code']); });
+      if (selected.length === 0) {
+        window.imSelected = {};
+        toast('Không tìm thấy biến thể tương ứng trong dữ liệu hiện tại.', 1);
+        imRender();
+        return;
+      }
+      var scmItems = selected.filter(function (item) { return item._is_scm; });
+      if (scmItems.length !== selected.length) {
+        toast('Golden Record MDM phải được thay đổi qua luồng Thêm / thay sản phẩm.', 1);
+        return;
+      }
+      if (!confirm('Xóa ' + scmItems.length + ' biến thể SCM đã chọn và toàn bộ Location liên quan?')) return;
+
       $('#content').innerHTML = '<div class="imempty">Đang xóa dữ liệu...</div>';
-      
-      // Separate SCM items (need API delete) from local static items
-      var allRows = window._currentImRows || [];
-      var scmItems = allRows.filter(i => i._is_scm && toDelete.includes(i['Sub Item Code']));
-      
+
       try {
-          if (scmItems.length > 0) {
-              var scmItemCodes = scmItems.map(i => i['Sub Item Code']);
-              // Delete from Supabase. Assuming Sub Item Code = Item Code in SCM integration.
-              const { error } = await sb.from('raw_data').delete().in('item_no', scmItemCodes);
-              if (error) throw error;
+          var rids = Array.from(new Set(scmItems.flatMap(function (item) { return item._scmRids || []; })));
+          if (!rids.length) throw new Error('Không tìm thấy khóa raw_data của các biến thể đã chọn.');
+          for (var offset = 0; offset < rids.length; offset += 200) {
+            var res = await sb.from('raw_data').delete().in('rid', rids.slice(offset, offset + 200));
+            if (res.error) throw res.error;
           }
-          
-          // Remove from local memory (Golden Record rowsAll and IMD.subItems)
-          if (window.IMD && Array.isArray(window.IMD)) {
-              window.IMD = window.IMD.filter(i => !toDelete.includes(i['Sub Item Code']));
-          } else if (window.IMD && window.IMD.subItems) {
-              window.IMD.subItems = window.IMD.subItems.filter(i => !toDelete.includes(i['Sub Item Code']));
-          }
-          if (window.rowsAll) {
-              window.rowsAll = window.rowsAll.filter(i => !toDelete.includes(i['Sub Item Code']));
-          }
-          window.imSelected = {}; // Clear selection
-          alert("Xóa thành công!");
-          
+
+          IMD.subItems = IMD.subItems.filter(function (item) { return !toDelete.includes(item['Sub Item Code']); });
+          IMD.offers = (IMD.offers || []).filter(function (offer) { return !toDelete.includes(offer['Sub Item Code']); });
+          var remainingItemCodes = new Set(IMD.subItems.map(function (item) { return item['Item Code']; }));
+          IMD.items = IMD.items.filter(function (item) { return !item._is_scm || remainingItemCodes.has(item['Item Code']); });
+          var counts = {};
+          IMD.subItems.forEach(function (item) { counts[item['Item Code']] = (counts[item['Item Code']] || 0) + 1; });
+          IMD.items.forEach(function (item) { item['Sub Item Count'] = counts[item['Item Code']] || 0; });
+          window.imSelected = {};
+          toast('Đã xóa ' + scmItems.length + ' biến thể SCM.');
       } catch (err) {
           console.error(err);
-          alert("Lỗi khi xóa: " + err.message);
+          toast('Lỗi khi xóa: ' + err.message, 1);
       }
       imRender();
     }
@@ -5828,34 +5865,136 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     }
 
     /* ---------- Item Management v2: one form + control by exception ---------- */
-    var IMREQ = [], IMSOURCE = '';
-    async function imFetchAll(table, orderCol) { var all = [], from = 0, size = 1000; while (true) { var q = sb.from(table).select('*').range(from, from + size - 1); if (orderCol) q = q.order(orderCol); var r = await q; if (r.error) return r; all = all.concat(r.data || []); if (!r.data || r.data.length < size) break; from += size; } return { data: all, error: null }; }
-    function imMapDb(cat, it, sub, off, content) {
+    var IMREQ = [], IMSYNC = [], IMCROSSWALK = [], IMFIELDMAP = [], IMSYNCREADY = false;
+    function imLoaderMessage(error) { return window.ItemLoader ? window.ItemLoader.errorMessage(error) : ((error && error.message) || String(error || 'Unknown data error')); }
+    function imProjectRef() { return window.ItemLoader ? window.ItemLoader.projectRef(ENV.SUPABASE_URL) : 'configured-project'; }
+    async function imSafeQuery(label, task) {
+      try {
+        var result = window.ItemLoader ? await window.ItemLoader.queryWithRetry(task, { attempts: 2, delayMs: 250 }) : await task(1);
+        if (result && result.error) result.error.message = label + ' [' + imProjectRef() + ']: ' + imLoaderMessage(result.error);
+        return result || { data: null, error: { message: label + ': empty response' } };
+      } catch (error) {
+        return { data: null, error: { message: label + ' [' + imProjectRef() + ']: ' + imLoaderMessage(error) } };
+      }
+    }
+    async function imFetchAllOnce(table, orderCol) { var all = [], from = 0, size = 1000; while (true) { var q = sb.from(table).select('*').range(from, from + size - 1); if (orderCol) q = q.order(orderCol); var r = await q; if (r.error) return r; all = all.concat(r.data || []); if (!r.data || r.data.length < size) break; from += size; } return { data: all, error: null }; }
+    async function imFetchAll(table, orderCol) { return imSafeQuery(table, function () { return imFetchAllOnce(table, orderCol); }); }
+    function imCanonicalImageUrl(image) {
+      if (!image) return null;
+      if (image.source_url) return image.source_url;
+      if (!image.storage_path) return null;
+      var result = sb.storage.from('item_images').getPublicUrl(image.storage_path);
+      return result && result.data ? result.data.publicUrl : null;
+    }
+    function imMapDb(cat, it, sub, off, content, offerLocations, images, replacements) {
+      var locationsByOffer = {}, primaryImageBySub = {}, imagesBySub = {}, imageRecordsBySub = {};
+      (offerLocations || []).forEach(function (x) {
+        if (!locationsByOffer[x.offer_id]) locationsByOffer[x.offer_id] = [];
+        locationsByOffer[x.offer_id].push(x);
+      });
+      (images || []).filter(function (x) { return x.status !== 'Inactive'; }).sort(function (a, b) {
+        return Number(b.is_primary) - Number(a.is_primary) || Number(a.display_order || 0) - Number(b.display_order || 0);
+      }).forEach(function (x) {
+        if (!imagesBySub[x.sub_item_code]) imagesBySub[x.sub_item_code] = [];
+        if (!imageRecordsBySub[x.sub_item_code]) imageRecordsBySub[x.sub_item_code] = [];
+        var imageUrl = imCanonicalImageUrl(x);
+        imagesBySub[x.sub_item_code].push(imageUrl);
+        imageRecordsBySub[x.sub_item_code].push({ imageId: x.image_id, url: imageUrl, isPrimary: !!x.is_primary, status: x.status });
+        if (!primaryImageBySub[x.sub_item_code]) primaryImageBySub[x.sub_item_code] = x;
+      });
       return {
         categories: (cat || []).map(function (x) { return { 'Category Code': x.category_code, Domain: x.domain, L1: x.l1, L2: x.l2, L3: x.l3, 'Default Allocation': x.default_allocation, Status: x.status }; }),
         items: (it || []).map(function (x) { return { 'Item Code': x.item_code, Domain: x.domain, 'Category Code': x.category_code, 'Item Name / Functional Spec': x.item_name, 'Functional UOM': x.functional_uom, Allocation: x.allocation_policy, 'Batch Required': x.batch_required ? 'Yes' : 'No', 'Split Allowed': x.split_allowed ? 'Yes' : 'No', 'Exact Only': x.exact_only ? 'Yes' : 'No', 'Business Line': x.business_line, 'Legacy Item No': x.legacy_item_no, 'Review Status': x.review_status, 'Review Note': x.review_note, 'Sub Item Count': 0 }; }),
-        subItems: (sub || []).map(function (x) { return { 'Item Code': x.item_code, 'Sub Item Code': x.sub_item_code, 'Sub Item Name': x.sub_item_name, Brand: x.brand, Manufacturer: x.manufacturer, 'Purchase UOM': x.purchase_uom, Conversion: x.conversion_factor, 'Base UOM': x.base_uom, 'Shelf Life Days': x.shelf_life_days, Storage: x.storage_condition, 'Batch Control': x.batch_control ? 'Yes' : 'No', 'Serial Control': x.serial_control ? 'Yes' : 'No', 'GTIN/Barcode': x.gtin, 'Country of Origin': x.country_of_origin, 'Image Status': x.image_status, 'Status': x.status, 'Review Status': x.review_status }; }),
-        offers: (off || []).map(function (x) { return { 'Offer ID': x.offer_id, 'Sub Item Code': x.sub_item_code, 'Vendor Code': x.vendor_code, 'Vendor Name': x.vendor_name, Region: x.region, 'Location Code': x.location_code, 'Purchase UOM': x.purchase_uom, Conversion: x.conversion_factor, 'Base UOM': x.base_uom, Currency: x.currency, MOQ: x.moq, 'Lead Time Days': x.lead_time_days, 'Unit Price Excl VAT': x.unit_price_excl_vat, 'Valid From': x.valid_from, 'Valid To': x.valid_to, 'Preferred': x.preferred, 'Offer Status': x.status }; }),
-        content: (content || []).map(function (x) { return { 'Sub Item Code': x.sub_item_code, 'Display Name': x.display_name, Brand: x.brand, Manufacturer: x.manufacturer, 'Pack Description': x.pack_description, Storage: '—', 'GTIN/Barcode': x.gtin, 'Country of Origin': x.country_of_origin }; })
+        subItems: (sub || []).map(function (x) { var image = primaryImageBySub[x.sub_item_code]; return { 'Item Code': x.item_code, 'Sub Item Code': x.sub_item_code, 'Sub Item Name': x.sub_item_name, Brand: x.brand, Manufacturer: x.manufacturer, 'Purchase UOM': x.purchase_uom, Conversion: x.conversion_factor, 'Base UOM': x.base_uom, 'Shelf Life Days': x.shelf_life_days, Storage: x.storage_condition, 'Batch Control': x.batch_control ? 'Yes' : 'No', 'Serial Control': x.serial_control ? 'Yes' : 'No', 'GTIN/Barcode': x.gtin, 'Country of Origin': x.country_of_origin, 'Image Status': image ? 'Available' : x.image_status, 'Primary Image': imCanonicalImageUrl(image), Images: (imagesBySub[x.sub_item_code] || []).filter(Boolean), 'Image Records': imageRecordsBySub[x.sub_item_code] || [], 'Status': x.status, 'Review Status': x.review_status }; }),
+        offers: (off || []).map(function (x) { var locs = locationsByOffer[x.offer_id] || []; return { 'Offer ID': x.offer_id, 'Sub Item Code': x.sub_item_code, 'Vendor Code': x.vendor_code, 'Vendor Name': x.vendor_name, Region: Array.from(new Set(locs.map(function (l) { return l.region; }).filter(Boolean))).join(', '), 'Location Code': locs.map(function (l) { return l.location_code; }).sort().join(', '), Locations: locs.map(function (l) { return l.location_code; }).sort(), 'Purchase UOM': x.purchase_uom, Conversion: x.conversion_factor, 'Base UOM': x.base_uom, Currency: x.currency, MOQ: x.moq, MOV: x.mov, 'Ship If': x.ship_if, 'Lead Time Days': x.lead_time_days, 'Unit Price Excl VAT': x.unit_price_excl_vat, 'Valid From': x.valid_from, 'Valid To': x.valid_to, 'Preferred': x.preferred, 'Offer Status': x.status }; }),
+        content: (content || []).map(function (x) { var image = primaryImageBySub[x.sub_item_code]; return { 'Sub Item Code': x.sub_item_code, 'Display Name': x.display_name, Brand: x.brand, Manufacturer: x.manufacturer, 'Pack Description': x.pack_description, Storage: '—', 'GTIN/Barcode': x.gtin, 'Country of Origin': x.country_of_origin, 'Primary Image': imCanonicalImageUrl(image), Images: (imagesBySub[x.sub_item_code] || []).filter(Boolean) }; }),
+        replacements: replacements || []
       };
     }
     function imTimeout(ms, label) { return new Promise(function (_, rej) { setTimeout(function () { rej(new Error('Quá thời gian chờ (' + (ms / 1000) + 's) khi tải ' + (label || 'dữ liệu') + '. Kiểm tra kết nối / RLS.')); }, ms); }); }
-    async function imLoadV2() {
-      var a = await Promise.race([imFetchAll('mdm_category', 'category_code'), imTimeout(15000, 'mdm_category')]);
-      if (a.error) { var f = await fetch('data/fnb-catalog.json'); IMD = await f.json(); IMREQ = []; IMSOURCE = 'Pilot local — chạy migration 0003/0004/0005 để ghi dữ liệu'; return; }
-      var rs = await Promise.race([Promise.all([imFetchAll('mdm_item', 'item_code'), imFetchAll('mdm_sub_item', 'sub_item_code'), imFetchAll('mdm_supplier_offer', 'offer_id'), imFetchAll('mdm_product_content', 'sub_item_code'), sb.from('mdm_item_request').select('*').order('created_at', { ascending: false }).limit(200)]), imTimeout(20000, 'các bảng mdm')]);
-      if (rs[0].error || rs[1].error) { var f2 = await fetch('data/fnb-catalog.json'); IMD = await f2.json(); IMREQ = []; IMSOURCE = 'Pilot local — database chưa sẵn sàng'; return; }
-      IMD = imMapDb(a.data, rs[0].data, rs[1].data, rs[2].data, rs[3].data); IMREQ = rs[4].data || []; IMSOURCE = 'Supabase · dữ liệu dùng chung';
-      var count = {}; IMD.subItems.forEach(function (s) { count[imVal(s, 'Item Code')] = (count[imVal(s, 'Item Code')] || 0) + 1; }); IMD.items.forEach(function (i) { i['Sub Item Count'] = count[imVal(i, 'Item Code')] || 0; });
-      try { await loadScmIntoIMD(); } catch(e) { console.error('SCM load error', e); }
+    async function imFetchScmRows() {
+      var all = [], from = 0, size = 1000;
+      while (true) {
+        var result = await sb.from('raw_data')
+          .select('*, items!inner(description, category), vendor(name), locations(region)')
+          .range(from, from + size - 1);
+        if (result.error) throw result.error;
+        all = all.concat(result.data || []);
+        if (!result.data || result.data.length < size) break;
+        from += size;
+      }
+      return all;
     }
-    async function itemMgmtView() { st.itemtab = st.itemtab || 'work'; if (st.itemtab === 'overview') st.itemtab = 'work'; if (!IMD) { $('#content').innerHTML = '<div class="imempty">Đang nạp Item Management…</div>'; try { await imLoadV2(); } catch (e) { $('#content').innerHTML = '<div class="imempty" style="color:var(--bad)">Không tải được dữ liệu: ' + esc(e.message) + '</div>'; return; } } imRender(); }
+    async function loadScmIntoIMD() {
+      if (!IMD || !window.ScmAdapter) return null;
+      await sb.auth.getSession();
+      var rawRows = await imFetchScmRows();
+      var stats = window.ScmAdapter.mergeInto(IMD, rawRows);
+      IMSOURCE = (IMSOURCE ? IMSOURCE + ' + ' : '') + 'SCM legacy (' + stats.rawRowCount.toLocaleString('vi-VN') + ' dòng)';
+      return stats;
+    }
+    async function imLoadLegacyFallback(sourceLabel) {
+      try {
+        IMD = window.ItemLoader ? await window.ItemLoader.loadCatalog(window.fetch.bind(window), 'data/fnb-catalog.json') : await (await fetch('data/fnb-catalog.json', { cache: 'no-store' })).json();
+      } catch (error) {
+        throw new Error((sourceLabel || 'Canonical unavailable') + '. Local fallback failed: ' + imLoaderMessage(error));
+      }
+      IMREQ = [];
+      IMSYNC = []; IMCROSSWALK = []; IMFIELDMAP = []; IMSYNCREADY = false;
+      IMCANONICAL = false;
+      IMSOURCE = 'Local product catalog · read-only · ' + (sourceLabel || 'canonical unavailable');
+    }
+    async function imLoadDownstream() {
+      var results = await Promise.all([
+        imSafeQuery('mdm_downstream_outbox', function () { return sb.from('mdm_downstream_outbox').select('*').order('created_at', { ascending: false }).limit(500); }),
+        imFetchAll('mdm_downstream_crosswalk', 'canonical_code'),
+        imFetchAll('mdm_downstream_field_mapping', 'sync_order')
+      ]);
+      IMSYNCREADY = results.every(function (result) { return !result.error; });
+      IMSYNC = results[0].error ? [] : (results[0].data || []);
+      IMCROSSWALK = results[1].error ? [] : (results[1].data || []);
+      IMFIELDMAP = results[2].error ? [] : (results[2].data || []);
+      return IMSYNCREADY;
+    }
+    async function imLoadV2() {
+      var a;
+      try { a = await Promise.race([imFetchAll('mdm_category', 'category_code'), imTimeout(15000, 'mdm_category')]); }
+      catch (error) { a = { data: null, error: { message: imLoaderMessage(error) } }; }
+      if (a.error) { await imLoadLegacyFallback('Canonical unavailable: ' + imLoaderMessage(a.error)); return; }
+      var rs;
+      try { rs = await Promise.race([Promise.all([
+          imFetchAll('mdm_item', 'item_code'),
+          imFetchAll('mdm_sub_item', 'sub_item_code'),
+          imFetchAll('mdm_supplier_offer', 'offer_id'),
+          imFetchAll('mdm_product_content', 'sub_item_code'),
+          imFetchAll('mdm_supplier_offer_location', 'offer_id'),
+          imFetchAll('mdm_product_image', 'sub_item_code'),
+          imSafeQuery('mdm_item_request', function () { return sb.from('mdm_item_request').select('*').order('created_at', { ascending: false }).limit(200); })
+        ]), imTimeout(20000, 'các bảng mdm')]); }
+      catch (error) { await imLoadLegacyFallback('Canonical unavailable: ' + imLoaderMessage(error)); return; }
+      if (rs.some(function (result) { return result.error; }) || !rs[0].data || rs[0].data.length === 0) {
+        var failed = rs.find(function (result) { return result.error; });
+        await imLoadLegacyFallback(failed ? ('Canonical unavailable: ' + imLoaderMessage(failed.error)) : 'Canonical tables have no backfilled Item data');
+        return;
+      }
+      var replacementResult = await imFetchAll('mdm_sub_item_replacement', 'effective_at');
+      IMD = imMapDb(a.data, rs[0].data, rs[1].data, rs[2].data, rs[3].data, rs[4].data, rs[5].data, replacementResult.error ? [] : replacementResult.data);
+      IMREQ = rs[6].data || [];
+      await imLoadDownstream();
+      IMCANONICAL = true;
+      IMSOURCE = 'Supabase · Item Management canonical';
+      var count = {};
+      IMD.subItems.forEach(function (s) { count[imVal(s, 'Item Code')] = (count[imVal(s, 'Item Code')] || 0) + 1; });
+      IMD.items.forEach(function (i) { i['Sub Item Count'] = count[imVal(i, 'Item Code')] || 0; });
+    }
+    async function itemMgmtView() { st.itemtab = st.itemtab || 'work'; if (st.itemtab === 'overview') st.itemtab = 'work'; if (!IMD) { $('#content').innerHTML = '<div class="imempty">Đang nạp Item Management…</div>'; try { await imLoadV2(); } catch (e) { $('#content').innerHTML = '<div class="imempty" style="color:var(--bad)"><b>Không tải được dữ liệu Product.</b><br><small>' + esc(imLoaderMessage(e)) + '</small><br><button class="btn pri" style="margin-top:12px" onclick="imRetryLoad()">Thử lại</button></div>'; return; } } imRender(); }
+    async function imRetryLoad() { IMD = null; IMREQ = []; IMSYNC = []; $('#content').innerHTML = '<div class="imempty">Đang thử tải lại Product…</div>'; await itemMgmtView(); }
     function imTabs() { return ''; }
-    function imTab(t) { if (t === 'new') { st.itemtab = 'work'; saveSt(); imRender(); return imSmartOpen(); } st.itemtab = t; saveSt(); imRender(); }
+    function imTab(t) { if (t === 'new') { st.itemtab = 'work'; saveSt(); toolbar(); imRender(); return imSmartOpen(); } st.itemtab = t; saveSt(); toolbar(); imRender(); }
     window.imSelected = window.imSelected || {};
     function imRender() {
-      if (!IMD) return; var t = st.itemtab || 'work', root; if (['items', 'subs', 'content', 'uom', 'offers', 'requests'].includes(t)) { root = '<div class="im2tabs"><button onclick="imTab(\'control\')">← Kiểm soát & ngoại lệ</button></div>'; root += t === 'items' ? imItems() : t === 'subs' ? imSubs() : t === 'content' ? imContent() : t === 'uom' ? imUom() : t === 'offers' ? imOffers() : imRequestAdmin(); }
-      else { root = imTabs() + imStepper(t) + (t === 'category' ? imCategory() : t === 'rules' ? imRules() : t === 'journey' ? imJourney() : t === 'list' ? imList() : t === 'search' ? imSearch() : t === 'control' ? imControl() : imWork()); if (t === 'journey') setTimeout(imJourneyInit, 30); } $('#content').innerHTML = '<div style="padding:14px;min-width:760px;position:relative">' + root + '</div>'; if (t === 'new') setTimeout(imSmartOpen, 0);
+      if (!IMD) return; var t = st.itemtab || 'work', root; if (['items', 'subs', 'content', 'uom', 'offers', 'requests', 'sync'].includes(t)) { root = '<div class="im2tabs"><button onclick="imTab(\'control\')">← Kiểm soát & ngoại lệ</button></div>'; root += t === 'items' ? imItems() : t === 'subs' ? imSubs() : t === 'content' ? imContent() : t === 'uom' ? imUom() : t === 'offers' ? imOffers() : t === 'sync' ? imSyncAdmin() : imRequestAdmin(); }
+      else { root = imTabs() + imStepper(t) + (t === 'category' ? imCategory() : t === 'rules' ? imRules() : t === 'journey' ? imJourney() : t === 'list' ? imList() : t === 'search' ? imSearch() : t === 'control' ? imControl() : imWork()); if (t === 'journey') setTimeout(imJourneyInit, 30); } var sourceBanner = '<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Nguồn Product: <b>' + esc(IMSOURCE || 'đang xác định') + '</b>' + (IMCANONICAL ? '' : ' · Chế độ tra cứu read-only') + ' <button class="btn" style="padding:2px 7px;font-size:10px;margin-left:6px" onclick="imRetryLoad()">Thử lại</button></div>'; $('#content').innerHTML = '<div style="padding:14px;min-width:760px;position:relative">' + sourceBanner + root + '</div>'; if (t === 'new') setTimeout(imSmartOpen, 0);
     }
     function imStatus(s) {
       s = s || 'Draft'; var v = String(s).toLowerCase(); var ok = v.indexOf('active') >= 0 || v === 'approved', bad = v.indexOf('reject') >= 0 || v.indexOf('need') >= 0 || v.indexOf('missing') >= 0, wait = v.indexOf('pending') >= 0 || v.indexOf('auto-mapped') >= 0 || v.indexOf('enrich') >= 0;
@@ -5934,12 +6073,78 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
         // Rule tự động
         + '<div class="im2rule"><b>Rule tự động — đúng rule thì không phát sinh approval</b><div><i>✓</i><p>Reuse Item Active khi match hợp lệ</p></div><div><i>✓</i><p>Chuẩn hóa UOM về gr/ml/cái</p></div><div><i>✓</i><p>FEFO/FIFO lấy từ Category</p></div><div><i>✓</i><p>Chỉ sync master Active xuống NAV/Vista</p></div></div>';
     }
-    function imFindRows() { var q = (IMQ || '').trim().toLowerCase(); if (q.length < 2) return []; return IMD.items.filter(function (x) { return [imVal(x, 'Item Code'), imVal(x, 'Item Name / Functional Spec'), imVal(x, 'Legacy Item No'), imVal(x, 'Category Code')].some(function (y) { return y.toLowerCase().includes(q); }); }).slice(0, 30); }
-    function imSearchResults() { var rows = imFindRows(); if ((IMQ || '').trim().length < 2) return '<div class="im2empty">Nhập ít nhất 2 ký tự để tìm trên toàn bộ master.</div>'; if (!rows.length) return '<div class="im2empty"><b>Chưa có Item phù hợp</b><br><br><button class="btn pri" onclick="imSmartOpen(IMQ)">Tạo từ “' + esc(IMQ) + '”</button></div>'; return rows.map(function (x) { return '<div class="im2result"><div><span class="imcode">' + esc(imVal(x, 'Item Code')) + '</span><b>' + esc(imVal(x, 'Item Name / Functional Spec')) + '</b><small>' + esc(imVal(x, 'Category Code')) + ' · BOM ' + esc(imVal(x, 'Functional UOM')) + ' · ' + esc(imVal(x, 'Sub Item Count')) + ' Sub Item</small></div><button class="btn pri" onclick="imSmartUse(\'' + esc(imVal(x, 'Item Code')) + '\')">Dùng Item này</button></div>'; }).join(''); }
-    function imSearch() { return '<div class="im2search"><div class="im2searchbox">⌕<input id="im2q" value="' + esc(IMQ) + '" placeholder="Tên sản phẩm, Item Code, legacy code…" oninput="IMQ=this.value;document.getElementById(\'im2results\').innerHTML=imSearchResults()"></div><p style="text-align:center;color:var(--muted);font-size:10px">Nếu đã có Item phù hợp, chỉ thêm brand/pack mới — không sửa BOM.</p><div class="impanel" id="im2results" style="padding:0">' + imSearchResults() + '</div></div>'; }
+    function imFindRows() { return window.ItemSearch ? window.ItemSearch.search(IMD, IMQ, 30) : []; }
+    function imSearchResults() {
+      if ((IMQ || '').trim().length < 2) return '<div class="im2empty">Nhập ít nhất 2 ký tự để tra cứu Item, Sub Item, brand, NCC hoặc location.</div>';
+      var rows = imFindRows();
+      if (!rows.length) return '<div class="im2empty"><b>Chưa có sản phẩm phù hợp.</b><br><small>Tra cứu là read-only. Dùng “Thêm / thay sản phẩm” để tạo yêu cầu mới.</small></div>';
+      return rows.map(function (entry) {
+        var item = entry.item, subs = entry.subItems || [], active = subs.filter(function (row) { return imVal(row.subItem, 'Status') === 'Active'; });
+        var image = (subs.map(function (row) { return row.subItem['Primary Image'] || row.content['Primary Image']; }).filter(Boolean)[0]);
+        var vendors = new Set(), locations = new Set();
+        subs.forEach(function (row) { row.offers.forEach(function (offer) { if (offer['Vendor Code']) vendors.add(offer['Vendor Code']); (offer.Locations || []).forEach(function (location) { locations.add(location); }); }); });
+        return '<button class="imsearchcard" onclick="imSearchItemDetail(\'' + esc(item['Item Code']) + '\')">'
+          + '<span class="imsearchimg">' + (image ? '<img src="' + esc(image) + '" alt="">' : '<i>Không có ảnh</i>') + '</span>'
+          + '<span class="imsearchbody"><span class="imcode">' + esc(item['Item Code']) + '</span><b>' + esc(item['Item Name / Functional Spec']) + '</b>'
+          + '<small>' + esc(item['Category Code']) + ' · ' + esc(item['Functional UOM']) + ' · ' + active.length + ' biến thể active</small>'
+          + '<em>' + vendors.size + ' NCC · ' + locations.size + ' location</em></span><strong>Xem chi tiết →</strong></button>';
+      }).join('');
+    }
+    function imSearch() { return '<div class="im2search"><div class="im2searchbox">⌕<input id="im2q" value="' + esc(IMQ) + '" placeholder="Item, biến thể, brand, NCC, location…" oninput="IMQ=this.value;document.getElementById(\'im2results\').innerHTML=imSearchResults()"></div><p style="text-align:center;color:var(--muted);font-size:10px">Màn tra cứu chỉ hiển thị dữ liệu canonical. Mọi thay đổi phải đi qua “Thêm / thay sản phẩm”.</p><div id="im2results" class="imsearchgrid">' + imSearchResults() + '</div></div>'; }
+    function imSearchItemDetail(itemCode) {
+      var entry = (window.ItemSearch ? window.ItemSearch.build(IMD) : []).find(function (x) { return x.item['Item Code'] === itemCode; });
+      if (!entry) return;
+      var item = entry.item;
+      var variants = entry.subItems.map(function (row) {
+        var sub = row.subItem, image = sub['Primary Image'] || row.content['Primary Image'];
+        var galleryImages = (sub.Images || row.content.Images || []).filter(Boolean);
+        var gallery = galleryImages.length > 1 ? '<div class="imsearchgallery">' + galleryImages.map(function (url) { return '<img src="' + esc(url) + '" alt="' + esc(sub['Sub Item Name']) + '">'; }).join('') + '</div>' : '';
+        var replacement = row.replacement ? '<div class="imreplaceinfo">Đã được thay bởi <b>' + esc(row.replacement.new_sub_item_code) + '</b> từ ' + esc(String(row.replacement.effective_at || '').slice(0, 10)) + '</div>' : '';
+        var offers = row.offers.length ? '<table class="imtbl"><thead><tr><th>NCC</th><th>Location</th><th>MOQ/MOV</th><th>Trạng thái</th></tr></thead><tbody>' + row.offers.map(function (offer) { return '<tr><td><b>' + esc(offer['Vendor Name'] || offer['Vendor Code']) + '</b><br><small>' + esc(offer['Vendor Code']) + '</small></td><td>' + esc(offer['Location Code'] || '—') + '</td><td>' + esc(offer.MOQ || '—') + ' / ' + esc(offer.MOV || '—') + '</td><td>' + esc(offer['Offer Status'] || '—') + '</td></tr>'; }).join('') + '</tbody></table>' : '<div class="im2empty">Chưa có Supplier Offer.</div>';
+        return '<section class="imsearchvariant"><div class="imsearchvarianthead"><span class="imsearchhero">' + (image ? '<img src="' + esc(image) + '" alt="' + esc(sub['Sub Item Name']) + '">' : '<i>Không có ảnh</i>') + '</span><div><span class="imcode">' + esc(sub['Sub Item Code']) + '</span><h3>' + esc(sub['Sub Item Name']) + '</h3><p>' + esc(sub.Brand || '—') + ' · 1 ' + esc(sub['Purchase UOM']) + ' = ' + esc(sub.Conversion) + ' ' + esc(sub['Base UOM']) + '</p><small>' + esc(sub.Storage || '—') + ' · HSD ' + esc(sub['Shelf Life Days'] || '—') + ' ngày · ' + esc(sub.Status) + '</small></div></div>' + gallery + replacement + offers + '</section>';
+      }).join('');
+      var html = '<div class="imhmask" onclick="imSearchDetailClose(event)"><div class="imhcard imsearchdetail" onclick="event.stopPropagation()"><div class="imhhead"><div><span class="imcode">' + esc(item['Item Code']) + '</span><b>' + esc(item['Item Name / Functional Spec']) + '</b></div><button onclick="imSearchDetailClose()" class="imhx">✕ Đóng</button></div><div class="imhbody"><div class="imsearchitemmeta"><span>Category <b>' + esc(item['Category Code']) + '</b></span><span>Functional UOM <b>' + esc(item['Functional UOM']) + '</b></span><span>Allocation <b>' + esc(item.Allocation) + '</b></span></div>' + variants + '</div></div></div>';
+      var wrap = document.createElement('div'); wrap.id = 'imsearchdetailwrap'; wrap.innerHTML = html; document.body.appendChild(wrap);
+    }
+    function imSearchDetailClose(e) { var wrap = document.getElementById('imsearchdetailwrap'); if (wrap) wrap.remove(); }
+    function imSyncSummary() {
+      return window.DownstreamSync ? window.DownstreamSync.summarize(IMSYNC || []) : { total: 0, Pending: 0, Processing: 0, Synced: 0, Failed: 0, Blocked: 0, needsAttention: 0, waiting: 0, byTarget: { NAV2017: 0, VISTA: 0 } };
+    }
     function imControl() {
-      var pending = IMREQ.filter(function (r) { return !['Approved', 'Rejected', 'Cancelled'].includes(r.status); }).length, miss = IMD.subItems.filter(function (x) { return imVal(x, 'Image Status') !== 'Available'; }).length, bad = IMD.subItems.filter(function (x) { return ['gr', 'ml'].includes(imVal(x, 'Purchase UOM').toLowerCase()); }).length;
-      return '<div class="im2control"><div><span>Chờ xử lý ngoại lệ</span><b style="color:var(--warn)">' + pending + '</b></div><div><span>UOM violation</span><b style="color:' + (bad ? 'var(--bad)' : 'var(--ok)') + '">' + bad + '</b></div><div><span>Thiếu ảnh/content</span><b style="color:var(--bad)">' + miss + '</b></div><div><span>Chờ downstream sync</span><b style="color:var(--blue)">12</b></div></div><div class="impanel" style="padding:0"><div class="im2head"><div><b>Quản trị theo ngoại lệ</b><small>Không review lại mọi request; chỉ xử lý rủi ro thật</small></div>' + imPill('Control by exception', 'ok') + '</div><div class="im2admin"><button onclick="imTab(\'items\')">Item Master (' + IMD.items.length + ')</button><button onclick="imTab(\'subs\')">Sub Item (' + IMD.subItems.length + ')</button><button onclick="imTab(\'content\')">Product Content</button><button onclick="imTab(\'uom\')">UOM & Conversion</button><button onclick="imTab(\'offers\')">Supplier Offers (' + IMD.offers.length.toLocaleString('vi-VN') + ')</button><button onclick="imTab(\'requests\')" style="background:var(--accent);color:#fff;border-color:var(--accent)">✔ Duyệt đề nghị (' + pending + ' chờ)</button></div></div><div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:8px;padding:11px 13px;margin-top:12px"><b>Rule duyệt:</b> Gắn vào Item có sẵn + UOM hợp lệ + không Exact-only → hệ thống tự tạo Sub Item và duyệt. Item mới hoặc spec ngoại lệ → gửi đúng một Category/Technical Owner.</div>';
+      var pending = IMREQ.filter(function (r) { return !['Approved', 'Rejected', 'Cancelled'].includes(r.status); }).length, miss = IMD.subItems.filter(function (x) { return imVal(x, 'Image Status') !== 'Available'; }).length, bad = IMD.subItems.filter(function (x) { return ['gr', 'ml'].includes(imVal(x, 'Purchase UOM').toLowerCase()); }).length, sync = imSyncSummary();
+      var syncCount = sync.waiting + sync.needsAttention;
+      return '<div class="im2control"><div><span>Chờ xử lý ngoại lệ</span><b style="color:var(--warn)">' + pending + '</b></div><div><span>UOM violation</span><b style="color:' + (bad ? 'var(--bad)' : 'var(--ok)') + '">' + bad + '</b></div><div><span>Thiếu ảnh/content</span><b style="color:var(--bad)">' + miss + '</b></div><div><span>Sync cần xử lý</span><b style="color:' + (sync.needsAttention ? 'var(--bad)' : 'var(--blue)') + '">' + syncCount + '</b></div></div><div class="impanel" style="padding:0"><div class="im2head"><div><b>Quản trị theo ngoại lệ</b><small>Không review lại mọi request; chỉ xử lý rủi ro thật</small></div>' + imPill('Control by exception', 'ok') + '</div><div class="im2admin"><button onclick="imTab(\'items\')">Item Master (' + IMD.items.length + ')</button><button onclick="imTab(\'subs\')">Sub Item (' + IMD.subItems.length + ')</button><button onclick="imTab(\'content\')">Product Content</button><button onclick="imTab(\'uom\')">UOM & Conversion</button><button onclick="imTab(\'offers\')">Supplier Offers (' + IMD.offers.length.toLocaleString('vi-VN') + ')</button><button onclick="imTab(\'sync\')">Downstream Sync (' + syncCount + ')</button><button onclick="imTab(\'requests\')" style="background:var(--accent);color:#fff;border-color:var(--accent)">✔ Duyệt đề nghị (' + pending + ' chờ)</button></div></div><div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:8px;padding:11px 13px;margin-top:12px"><b>Rule duyệt:</b> Gắn vào Item có sẵn + UOM hợp lệ + không Exact-only → hệ thống tự tạo Sub Item và duyệt. Item mới hoặc spec ngoại lệ → gửi đúng một Category/Technical Owner.</div>';
+    }
+    function imSyncAdmin() {
+      var sync = imSyncSummary(), canManage = MYROLE === 'Admin' || MYROLE === 'Approver';
+      if (!IMSYNCREADY) return '<div class="im2empty"><b>Phase 4 chưa sẵn sàng trên database.</b><br>Chạy migration 0006_downstream_sync.sql sau khi được duyệt triển khai. Item Management hiện tại vẫn hoạt động bình thường.</div>';
+      var validation = window.DownstreamSync ? window.DownstreamSync.validateCrosswalk(IMCROSSWALK) : { ok: true, issues: [] };
+      var eventRows = (IMSYNC || []).map(function (event) {
+        var retry = canManage && ['Failed', 'Blocked'].includes(event.status) ? '<button class="btn" style="padding:3px 8px;font-size:10px" onclick="imSyncRetry(\'' + esc(event.event_id) + '\')">Retry</button>' : '—';
+        return '<tr><td><b>' + esc(event.target_system) + '</b></td><td>' + esc(event.entity_type) + '<br><span class="imcode">' + esc(event.canonical_code) + '</span></td><td>' + esc(event.external_id || '—') + '</td><td>' + esc(event.operation) + '</td><td>' + imStatus(event.status) + '</td><td>' + Number(event.attempt_count || 0) + '</td><td style="max-width:260px;white-space:normal">' + esc(event.last_error || '—') + '</td><td>' + retry + '</td></tr>';
+      }).join('') || '<tr><td colspan="8" style="color:var(--faint)">Chưa có event. Event được tạo khi Item Request chuyển sang Approved.</td></tr>';
+      var crosswalkRows = (IMCROSSWALK || []).map(function (row) { return '<tr><td>' + esc(row.target_system) + '</td><td>' + esc(row.entity_type) + '</td><td class="imcode">' + esc(row.canonical_code) + '</td><td>' + esc(row.external_id) + '</td><td>' + imStatus(row.status) + '</td><td>' + esc(row.note || '—') + '</td></tr>'; }).join('') || '<tr><td colspan="6" style="color:var(--faint)">Chưa có crosswalk.</td></tr>';
+      var mappingRows = (IMFIELDMAP || []).map(function (row) { return '<tr><td>' + esc(row.target_system) + '</td><td>' + esc(row.entity_type) + '</td><td class="imcode">' + esc(row.canonical_field) + '</td><td class="imcode">' + esc(row.external_field) + '</td><td>' + (row.required ? 'Bắt buộc' : 'Tùy chọn') + '</td><td>' + esc(row.transform_rule) + '</td></tr>'; }).join('');
+      var form = canManage ? '<div style="display:grid;grid-template-columns:130px 130px 1fr 1fr 1fr auto;gap:8px;align-items:end;margin:10px 0"><label>Hệ thống<select id="imSyncTarget"><option>NAV2017</option><option>VISTA</option></select></label><label>Entity<select id="imSyncEntity"><option>Item</option><option>Sub_Item</option></select></label><label>Mã G-ERP<input id="imSyncCanonical" placeholder="ITM-… / SUB-…"></label><label>External ID<input id="imSyncExternal" placeholder="ID trong NAV/Vista"></label><label>Ghi chú<input id="imSyncNote" placeholder="Nguồn xác minh"></label><button class="btn pri" onclick="imCrosswalkSave()">Xác minh mapping</button></div>' : '<div class="im2empty">Viewer/Buyer được xem trạng thái. Chỉ Approver/Admin được xác minh crosswalk và retry.</div>';
+      return '<div class="im2control"><div><span>Pending</span><b style="color:var(--blue)">' + sync.Pending + '</b></div><div><span>Processing</span><b>' + sync.Processing + '</b></div><div><span>Synced</span><b style="color:var(--ok)">' + sync.Synced + '</b></div><div><span>Failed / Blocked</span><b style="color:' + (sync.needsAttention ? 'var(--bad)' : 'var(--ok)') + '">' + sync.needsAttention + '</b></div></div>'
+        + '<div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:8px;padding:10px 12px;margin:10px 0"><b>Adapter boundary:</b> frontend không gửi dữ liệu xuống NAV/Vista. Worker service-role claim event bằng idempotency key và ghi kết quả về outbox. Crosswalk validation: <b style="color:' + (validation.ok ? 'var(--ok)' : 'var(--bad)') + '">' + (validation.ok ? 'Hợp lệ' : validation.issues.length + ' lỗi') + '</b>.</div>'
+        + '<div class="impanel" style="padding:0"><div class="im2head"><div><b>Transactional outbox</b><small>Tối đa 500 event gần nhất · NAV2017 ' + sync.byTarget.NAV2017 + ' · Vista ' + sync.byTarget.VISTA + '</small></div></div><table class="imtbl"><thead><tr><th>Target</th><th>Entity</th><th>External ID</th><th>Operation</th><th>Status</th><th>Attempt</th><th>Lỗi gần nhất</th><th>Action</th></tr></thead><tbody>' + eventRows + '</tbody></table></div>'
+        + '<div class="impanel" style="margin-top:12px"><div class="im2head"><div><b>Crosswalk G-ERP ↔ downstream</b><small>Thiếu hoặc chưa Verified sẽ chặn dispatch.</small></div></div>' + form + '<table class="imtbl"><thead><tr><th>Target</th><th>Entity</th><th>Canonical</th><th>External ID</th><th>Status</th><th>Ghi chú</th></tr></thead><tbody>' + crosswalkRows + '</tbody></table></div>'
+        + '<div class="impanel" style="margin-top:12px;padding:0"><div class="im2head"><div><b>Field mapping contract</b><small>G-ERP canonical → NAV2017/Vista, một chiều.</small></div></div><table class="imtbl"><thead><tr><th>Target</th><th>Entity</th><th>Canonical field</th><th>External field</th><th>Rule</th><th>Transform</th></tr></thead><tbody>' + mappingRows + '</tbody></table></div>';
+    }
+    async function imCrosswalkSave() {
+      if (!(MYROLE === 'Admin' || MYROLE === 'Approver')) return toast('Chỉ Approver/Admin được xác minh crosswalk.', 1);
+      var canonical = ($('#imSyncCanonical').value || '').trim(), external = ($('#imSyncExternal').value || '').trim();
+      if (!canonical || !external) return toast('Cần nhập mã G-ERP và External ID.', 1);
+      var result = await sb.rpc('mdm_upsert_downstream_crosswalk', { p_target_system: $('#imSyncTarget').value, p_entity_type: $('#imSyncEntity').value, p_canonical_code: canonical, p_external_id: external, p_status: 'Verified', p_note: ($('#imSyncNote').value || '').trim() || null });
+      if (result.error || !result.data || !result.data.ok) return toast('Lỗi: ' + (result.error ? result.error.message : result.data.error), 1);
+      toast('Đã xác minh crosswalk và mở khóa ' + Number(result.data.events_updated || 0) + ' event.'); await imLoadDownstream(); imRender();
+    }
+    async function imSyncRetry(eventId) {
+      if (!(MYROLE === 'Admin' || MYROLE === 'Approver')) return toast('Chỉ Approver/Admin được retry.', 1);
+      var result = await sb.rpc('mdm_retry_downstream_event', { p_event_id: eventId });
+      if (result.error || !result.data || !result.data.ok) return toast('Chưa thể retry: ' + (result.error ? result.error.message : result.data.error), 1);
+      toast('Event đã trở lại hàng đợi Pending.'); await imLoadDownstream(); imRender();
     }
     function imRequestAdmin() {
       var canApprove = (typeof MYROLE !== 'undefined') && (MYROLE === 'Admin' || MYROLE === 'Approver');
@@ -5948,15 +6153,17 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       var reqRows = imFilterApply('IMREQFILTER', IMREQ, REQMAP);
       var head = '<div style="background:#f5f9fd;border:1px solid #d9e3ef;border-radius:8px;padding:10px 12px;margin-bottom:10px"><b>Duyệt đề nghị sản phẩm.</b> ' + pend.length + ' đề nghị đang chờ. ' + (canApprove ? 'Bạn có quyền duyệt (Admin/Approver).' : 'Chỉ Admin/Approver mới duyệt được.') + '</div>'
         + '<div class="imbar">' + imFilterUI('IMREQFILTER', Object.keys(REQMAP), IMREQ, REQMAP) + '<span class="count">' + reqRows.length + ' đề nghị</span></div>';
-      return head + '<div class="impanel" style="padding:0"><table class="imtbl"><thead><tr><th>Request</th><th>Name</th><th>Type</th><th>Requester</th><th>Owner</th><th>Status</th>' + (canApprove ? '<th>Action</th>' : '') + '</tr></thead><tbody>' + reqRows.map(function (r) {
+      return head + '<div class="impanel" style="padding:0"><table class="imtbl"><thead><tr><th>Request</th><th>Name</th><th>Type</th><th>Category / Sub Item</th><th>Requester</th><th>Owner</th><th>Status</th>' + (canApprove ? '<th>Action</th>' : '') + '</tr></thead><tbody>' + reqRows.map(function (r) {
         var done = ['Approved', 'Rejected', 'Cancelled'].includes(r.status);
+        var payload = r.proposed_payload || {}, scope = payload.category_code || r.existing_sub_item_code || r.replaced_sub_item_code || r.requested_item_code || '—';
         var act = canApprove ? ('<td>' + (done ? '<span style="color:#8b96ad;font-size:11px">—</span>' : '<button class="btn pri" style="padding:3px 9px;font-size:11px" onclick="imApprove(\'' + esc(r.request_no) + '\',\'approve\')">Duyệt</button> <button class="btn" style="padding:3px 9px;font-size:11px" onclick="imApprove(\'' + esc(r.request_no) + '\',\'reject\')">Từ chối</button>') + '</td>') : '';
-        return '<tr><td class="imcode">' + esc(r.request_no || '') + '</td><td><b>' + esc(r.requested_name || '') + '</b></td><td>' + esc(r.request_type || '') + '</td><td>' + esc(r.requester || '') + '</td><td>' + esc(r.current_owner || '') + '</td><td>' + imStatus(r.status) + '</td>' + act + '</tr>';
+        return '<tr><td class="imcode">' + esc(r.request_no || '') + '</td><td><b>' + esc(r.requested_name || '') + '</b></td><td>' + esc(r.request_type || '') + '</td><td class="imcode">' + esc(scope) + '</td><td>' + esc(r.requester || '') + '</td><td>' + esc(r.current_owner || '') + '</td><td>' + imStatus(r.status) + '</td>' + act + '</tr>';
       }).join('') + '</tbody></table></div>';
     }
     async function imApprove(reqNo, decision) {
       if (decision === 'reject' && !confirm('Từ chối đề nghị ' + reqNo + '?')) return;
-      var note = decision === 'reject' ? (prompt('Lý do từ chối:') || '') : '';
+      var note = decision === 'reject' ? prompt('Lý do từ chối:') : '';
+      if (decision === 'reject' && (!note || !note.trim())) return toast('Cần nhập lý do từ chối.', 1);
       var r = await sb.rpc('mdm_approve_request', { p_request_no: reqNo, p_decision: decision, p_note: note });
       if (r.error) { toast('Lỗi: ' + r.error.message, 1); return; }
       var d = r.data || {};
@@ -5964,16 +6171,79 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       toast(decision === 'reject' ? 'Đã từ chối ' + reqNo : ('Đã duyệt · ' + (d.sub_item_code || reqNo)));
       IMD = null; IMREQ = []; await itemMgmtView();
     }
-    var IMSMART = { item: '', name: '' };
+    var IMSMART = { item: '', name: '', mode: 'sub_item', existingSubItemCode: '', replacedSubItemCode: '', submissionKey: '' };
+    function imCanSubmit() { return window.ItemWorkflow && window.ItemWorkflow.capabilities(MYROLE, IMCANONICAL).canSubmit; }
     function imSmartUse(code) { var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === code; }); imSmartOpen(it ? imVal(it, 'Item Name / Functional Spec') : '', code); }
-    function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '' }; var old = $('#im2shade'); if (old) old.remove(); var d = document.createElement('div'); d.id = 'im2shade'; d.className = 'im2shade'; d.innerHTML = '<div class="im2modal"><header><div><span>ĐỀ NGHỊ · KHAI 1 LẦN</span><h2>Đề nghị sản phẩm</h2><p>Buyer khai — Admin duyệt. G-ERP tự sinh mã & cấu trúc master phía sau.</p></div><button class="im2close" onclick="imSmartClose()">×</button></header><div class="im2body"><section class="im2form"><label class="im2primary">Sản phẩm muốn mua<input id="im2name" value="' + esc(IMSMART.name) + '" placeholder="Tên trên bao bì hoặc nhu cầu sử dụng…" oninput="IMSMART.name=this.value;IMSMART.item=\'\';imSmartRefresh()"></label><div id="im2matches"></div><div class="im2fields"><div class="im2grouplbl" style="grid-column:1/-1;color:#2b6cb0">🏢 Thông tin lõi — phòng ban owner</div><label>Bộ phận<select id="im2domain"><option>F&B</option><option>Kỹ thuật</option><option>Operations</option><option>Marketing</option></select></label><label>Nhãn hiệu / model<input id="im2brand" placeholder="VD: TH true MILK" oninput="imBrandSync();imSmartRefresh()"></label><label>Manufacturer (NSX)<input id="im2manu" placeholder="Tự lấy theo brand — sửa nếu khác" oninput="this.dataset.touched=1"></label><div class="im2grouplbl" style="grid-column:1/-1;color:#147a52;margin-top:4px">🛒 Mua hàng — Buyer khai (Procurement bổ sung sau nếu chưa biết)</div><label>Đơn vị mua<select id="im2pu" onchange="imSmartRefresh()">' + ['chai', 'hop', 'thung', 'bao', 'bich', 'cai', 'goi', 'lon', 'tui', 'vi'].map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select></label><label>Quy cách 1 đơn vị mua<div class="im2compound"><input id="im2factor" type="number" min="0.000001" value="1000" oninput="imSmartRefresh()"><select id="im2base" onchange="imSmartRefresh()"><option>gr</option><option selected>ml</option><option>cai</option></select></div></label><label class="im2wide">Nhà cung cấp <span style="font-weight:400;color:var(--muted)">(chọn từ NCC đã có)</span><input id="im2supplier" list="im2suplist" placeholder="Gõ để tìm NCC trong hệ thống…" autocomplete="off">' + imSupOptions() + '</label></div><label class="im2upload"><input id="im2file" type="file" accept="image/*"><span style="font-size:20px;color:var(--accent)">＋</span><div><b>Thêm ảnh bao bì / spec</b><small>Ảnh được lưu cùng Product Content</small></div></label><label class="im2check"><input id="im2exact" type="checkbox" onchange="imSmartRefresh()"><span>Bắt buộc đúng brand/model, không được tự thay thế</span></label></section><aside class="im2preview" id="im2preview"></aside></div><footer><span>Buyer khai · không nhập code · Admin duyệt · G-ERP tự sinh mã</span><button class="btn" onclick="imSmartClose();imBulkOpen()">📋 Nhập nhiều dòng</button><button class="btn" onclick="imSmartClose()">Hủy</button><button class="btn pri" id="im2submit" onclick="imSmartSubmit()">Gửi</button></footer></div>'; document.body.appendChild(d); d.onclick = function (e) { if (e.target === d) imSmartClose(); }; if (IMSMART.item) imSmartSelect(IMSMART.item); else imSmartRefresh(); setTimeout(function () { var n = $('#im2name'); if (n) n.focus(); }, 0); }
+    function imSmartOpenForSub(code, mode) {
+      var sub = (IMD.subItems || []).find(function (x) { return x['Sub Item Code'] === code; });
+      if (!sub) return toast('Không tìm thấy Sub Item.', 1);
+      var item = (IMD.items || []).find(function (x) { return x['Item Code'] === sub['Item Code']; }) || {};
+      imSmartOpen(sub['Sub Item Name'] || item['Item Name / Functional Spec'], sub['Item Code'], { mode: mode, subItem: sub });
+    }
+    function imSmartOpen(name, itemOrSub, options) {
+      if (!imCanSubmit()) return toast(IMCANONICAL ? 'Vai trò hiện tại chỉ được tra cứu sản phẩm.' : 'Canonical database chưa sẵn sàng; chế độ legacy chỉ cho phép tra cứu.', 1);
+      options = options || {};
+      var sub = options.subItem || (IMD.subItems || []).find(function (x) { return x['Sub Item Code'] === itemOrSub; });
+      var itemCode = sub ? sub['Item Code'] : (itemOrSub || '');
+      var item = (IMD.items || []).find(function (x) { return x['Item Code'] === itemCode; }) || {};
+      var mode = options.mode || 'sub_item', existing = mode === 'offer' || mode === 'content' ? (sub && sub['Sub Item Code']) : '';
+      IMSMART = { item: itemCode, name: name || (sub && sub['Sub Item Name']) || '', mode: mode, existingSubItemCode: existing || '', replacedSubItemCode: mode === 'replace' && sub ? sub['Sub Item Code'] : '', submissionKey: window.ItemWorkflow.submissionKey() };
+      var old = $('#im2shade'); if (old) old.remove();
+      var fixed = !!sub, title = { sub_item: 'Thêm sản phẩm / biến thể', offer: 'Thêm Supplier Offer', content: 'Cập nhật Product Content', replace: 'Thay sản phẩm' }[mode] || 'Thêm / thay sản phẩm';
+      var puValue = sub && sub['Purchase UOM'] || 'chai', baseValue = sub && sub['Base UOM'] || item['Functional UOM'] || 'ml';
+      var categoryValue = item['Category Code'] || '', categoryRows = (IMD.categories || []).filter(function (category) { return imVal(category, 'Status') === 'Active'; });
+      var categoryOptions = '<option value="">Chọn Category để owner xác nhận…</option>' + categoryRows.map(function (category) { var code = category['Category Code']; return '<option value="' + esc(code) + '" ' + (code === categoryValue ? 'selected' : '') + '>' + esc(code + ' — ' + (category.L3 || category.L2 || category.L1 || '')) + '</option>'; }).join('');
+      var uoms = ['chai', 'hop', 'thung', 'bao', 'bich', 'cai', 'goi', 'lon', 'tui', 'vi']; if (puValue && !uoms.includes(puValue)) uoms.unshift(puValue);
+      var bases = ['gr', 'ml', 'cai', 'Kg', 'L']; if (baseValue && !bases.includes(baseValue)) bases.unshift(baseValue);
+      var modeNote = mode === 'replace' ? '<div class="imworkflowlock">Sản phẩm cũ <b>' + esc(IMSMART.replacedSubItemCode) + '</b> chỉ chuyển Inactive sau khi Approver duyệt. Lịch sử và Offer cũ được giữ nguyên.</div>' : mode === 'offer' ? '<div class="imworkflowlock">Offer mới sẽ gắn vào Sub Item <b>' + esc(IMSMART.existingSubItemCode) + '</b>; không tạo Item/Sub Item mới.</div>' : mode === 'content' ? '<div class="imworkflowlock">Ảnh và content được cập nhật qua request; màn Tra cứu vẫn read-only.</div>' : '';
+      var existingImageRecords = sub && sub['Image Records'] || [];
+      var existingImages = mode === 'content' && existingImageRecords.length ? '<div class="imexistingimages"><b>Ảnh hiện tại</b><small>Chọn ảnh chính hoặc đánh dấu ảnh cần gỡ khi request được duyệt.</small><div>' + existingImageRecords.map(function (image) { return '<label><img src="' + esc(image.url) + '" alt=""><span><input type="radio" name="imExistingPrimary" value="' + esc(image.imageId) + '" ' + (image.isPrimary ? 'checked' : '') + '> Ảnh chính</span><span><input type="checkbox" name="imRemoveImage" value="' + esc(image.imageId) + '" onchange="imImageRemoveToggle(this)"> Gỡ ảnh</span></label>'; }).join('') + '</div></div>' : '';
+      var imageSection = mode === 'offer' ? '' : '<label class="im2upload"><input id="im2file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onchange="imImageSelection()"><span style="font-size:20px;color:var(--accent)">＋</span><div><b>Ảnh bao bì / spec</b><small>Tối đa 5 ảnh · JPG/PNG/WEBP/GIF · 5 MB/ảnh · lưu trong Product Content</small><div class="imimagefiles" id="imimagefiles"></div></div></label><label class="im2check"><input id="im2primaryimage" type="checkbox" checked><span>Đặt ảnh đầu tiên làm ảnh chính</span></label>';
+      var d = document.createElement('div'); d.id = 'im2shade'; d.className = 'im2shade';
+      d.innerHTML = '<div class="im2modal"><header><div><span>ITEM MANAGEMENT · WORKFLOW</span><h2>' + esc(title) + '</h2><p>Mọi thay đổi đi qua request và được ghi lịch sử.</p></div><button class="im2close" onclick="imSmartClose()">×</button></header><div class="im2body"><section class="im2form">' + modeNote + existingImages
+        + '<label class="im2primary">Tên sản phẩm<input id="im2name" value="' + esc(IMSMART.name) + '" placeholder="Tên trên bao bì hoặc nhu cầu sử dụng…" ' + ((mode === 'offer') ? 'readonly' : '') + ' oninput="IMSMART.name=this.value;' + (!fixed ? 'IMSMART.item=\'\';' : '') + 'imSmartRefresh()"></label><div id="im2matches"></div>'
+        + '<div class="im2fields"><div class="im2grouplbl" style="grid-column:1/-1;color:#2b6cb0">🏢 Product Content</div><label>Bộ phận<select id="im2domain"><option>F&B</option><option>Technical</option><option>Facilities</option><option>Marketing</option></select></label><label>Category<select id="im2category" onchange="imSmartRefresh()">' + categoryOptions + '</select></label><label>Nhãn hiệu / model<input id="im2brand" value="' + esc(sub && sub.Brand || '') + '" placeholder="VD: TH true MILK" oninput="imBrandSync();imSmartRefresh()"></label><label>Manufacturer<input id="im2manu" value="' + esc(sub && sub.Manufacturer || '') + '" placeholder="Nhà sản xuất" oninput="this.dataset.touched=1"></label>'
+        + '<div class="im2grouplbl" style="grid-column:1/-1;color:#147a52;margin-top:4px">🛒 Quy cách & Supplier Offer</div><label>Đơn vị mua<select id="im2pu" onchange="imSmartRefresh()">' + uoms.map(function (x) { return '<option ' + (x === puValue ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></label><label>Quy cách<div class="im2compound"><input id="im2factor" type="number" min="0.000001" value="' + esc(sub && sub.Conversion || 1000) + '" oninput="imSmartRefresh()"><select id="im2base" onchange="imSmartRefresh()">' + bases.map(function (x) { return '<option ' + (x === baseValue ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div></label><label class="im2wide">Nhà cung cấp <span style="font-weight:400;color:var(--muted)">(phải chọn từ Supplier Management)</span><input id="im2supplier" list="im2suplist" placeholder="Mã NCC — Tên NCC" autocomplete="off" oninput="imSmartRefresh()">' + imSupOptions() + '</label></div>'
+        + imageSection + '<label class="im2check"><input id="im2exact" type="checkbox" onchange="imSmartRefresh()"><span>Bắt buộc đúng brand/model</span></label></section><aside class="im2preview" id="im2preview"></aside></div><footer><span>Buyer gửi · System auto-approve trường hợp an toàn · Approver xử lý ngoại lệ</span><button class="btn" onclick="imSmartClose()">Hủy</button><button class="btn pri" id="im2submit" onclick="imSmartSubmit()">Gửi yêu cầu</button></footer></div>';
+      document.body.appendChild(d); d.onclick = function (e) { if (e.target === d) imSmartClose(); };
+      var domainSelect = $('#im2domain'); if (domainSelect && item.Domain) domainSelect.value = item.Domain;
+      imSmartRefresh(); setTimeout(function () { var input = $('#im2name'); if (input && !fixed) input.focus(); }, 0);
+    }
     function imSupOptions() { var arr = (typeof DB !== 'undefined' && DB) ? DB : []; return '<datalist id="im2suplist">' + arr.slice(0, 1000).map(function (v) { var lbl = (v.code ? v.code + ' — ' : '') + (v.name || ''); return '<option value="' + esc(lbl) + '">'; }).join('') + '</datalist>'; }
     function imBrandSync() { var b = $('#im2brand'), m = $('#im2manu'); if (b && m && !m.dataset.touched) m.value = b.value; }
     function imSmartClose() { var d = $('#im2shade'); if (d) d.remove(); }
-    function imSmartCandidates() { var q = String(IMSMART.name || '').trim().toLowerCase(); if (q.length < 2) return []; var words = q.split(/\s+/).filter(function (w) { return w.length > 1; }); return IMD.items.map(function (x) { var s = (imVal(x, 'Item Name / Functional Spec') + ' ' + imVal(x, 'Legacy Item No')).toLowerCase(), score = words.filter(function (w) { return s.includes(w); }).length; return { x: x, score: score }; }).filter(function (r) { return r.score > 0; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3).map(function (r) { return r.x; }); }
-    function imSmartSelect(code) { IMSMART.item = code; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === code; }); if (it) { var b = $('#im2base'); if (b) b.value = imVal(it, 'Functional UOM'); } imSmartRefresh(); }
-    function imSmartRefresh() { var wrap = $('#im2matches'); if (!wrap) return; var cand = imSmartCandidates(); wrap.innerHTML = cand.length ? '<div class="im2matches"><b style="font-size:10.5px">Hệ thống tìm thấy Item có thể dùng lại</b><p>Chọn để không tạo trùng và không sửa BOM.</p>' + cand.map(function (x) { var code = imVal(x, 'Item Code'), sel = IMSMART.item === code; return '<button class="im2match ' + (sel ? 'sel' : '') + '" onclick="imSmartSelect(\'' + esc(code) + '\')"><p><b>' + esc(imVal(x, 'Item Name / Functional Spec')) + '</b><small>' + esc(code) + ' · ' + esc(imVal(x, 'Category Code')) + '</small></p><em>' + (sel ? '✓ Đã chọn' : 'Gắn vào Item này') + '</em></button>'; }).join('') + '</div>' : ''; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === IMSMART.item; }), domain = $('#im2domain') ? $('#im2domain').value : 'F&B', brand = $('#im2brand') ? $('#im2brand').value.trim() : '', pu = $('#im2pu') ? $('#im2pu').value : '', factor = Number($('#im2factor') ? $('#im2factor').value : 0), base = $('#im2base') ? $('#im2base').value : 'ml', exact = $('#im2exact') && $('#im2exact').checked, ready = !!(it && brand && factor > 0 && !exact && imVal(it, 'Functional UOM') === base && imVal(it, 'Domain') === domain); var p = $('#im2preview'); p.innerHTML = '<h3>⚡ G-ERP tự xử lý</h3><ul><li><span>Category</span><b>' + (it ? esc(imVal(it, 'Category Code')) : 'Tự nhận diện · owner xác nhận') + '</b></li><li><span>Item Code</span><b>' + (it ? 'Dùng lại ' + esc(IMSMART.item) : 'Tự sinh sau khi duyệt') + '</b></li><li><span>Sub Item Code</span><b>Tự sinh theo Item</b></li><li><span>Conversion</span><b>1 ' + esc(pu) + ' = ' + factor.toLocaleString('vi-VN') + ' ' + esc(base) + '</b></li><li><span>Stock policy</span><b>' + (exact ? 'Exact match' : 'FEFO · tự phân bổ') + '</b></li><li><span>Supplier Offer</span><b>Procurement bổ sung nếu cần</b></li></ul><div class="im2decision ' + (ready ? 'ok' : 'warn') + '"><b>' + (ready ? '✓ Đủ điều kiện tự duyệt' : '! Gửi đúng 1 owner xác nhận') + '</b><small>' + (ready ? 'Dùng Item có sẵn · UOM hợp lệ · policy chuẩn' : (!it ? 'Item mới cần Category Owner xác nhận' : exact ? 'Exact-only cần owner xác nhận' : imVal(it, 'Domain') !== domain ? 'Bộ phận không khớp domain Item' : 'Bổ sung brand hoặc kiểm tra Base UOM')) + '</small></div>'; var s = $('#im2submit'); if (s) s.textContent = ready ? 'Tạo & hoàn tất' : 'Gửi đúng owner duyệt'; var dm = $('#im2domain'); if (dm && !dm._imBound) { dm._imBound = true; dm.onchange = imSmartRefresh; } }
-    async function imSmartSubmit() { var name = $('#im2name').value.trim(), brand = $('#im2brand').value.trim(), domain = $('#im2domain').value, pu = $('#im2pu').value, factor = Number($('#im2factor').value), base = $('#im2base').value, supplier = $('#im2supplier').value.trim(), exact = $('#im2exact').checked; if (!name || !brand || !factor || factor <= 0) return toast('Cần nhập tên, brand/model và quy cách hợp lệ', 1); if (['gr', 'ml'].includes(pu.toLowerCase())) return toast('Purchase UOM không được là gr hoặc ml', 1); var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === IMSMART.item; }); if (it && imVal(it, 'Functional UOM') !== base) return toast('Base UOM phải khớp Functional UOM của Item: ' + imVal(it, 'Functional UOM'), 1); var btn = $('#im2submit'); btn.disabled = true; btn.textContent = 'Đang xử lý…'; var imagePath = null, fi = $('#im2file'); if (fi && fi.files && fi.files[0]) { var file = fi.files[0], path = 'items-mdm/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_'), up = await sb.storage.from('vendor-docs').upload(path, file); if (up.error) { btn.disabled = false; btn.textContent = 'Thử lại'; return toast('Lỗi tải ảnh: ' + up.error.message, 1); } imagePath = path; } var r = await sb.rpc('mdm_submit_item_intake', { p_requested_name: name, p_domain: domain, p_item_code: IMSMART.item || null, p_brand: brand, p_purchase_uom: pu, p_conversion_factor: factor, p_base_uom: base, p_supplier_note: supplier || null, p_exact_only: exact, p_image_path: imagePath, p_requester: me.email, p_manufacturer: ($('#im2manu') ? $('#im2manu').value.trim() : '') || null }); if (r.error) { btn.disabled = false; btn.textContent = 'Thử lại'; return toast('Chưa chạy migration 0005_smart_intake.sql hoặc lỗi DB: ' + r.error.message, 1); } imSmartClose(); IMD = null; IMREQ = []; await itemMgmtView(); var x = r.data || {}; toast(x.auto_approved ? 'Đã tạo ' + x.sub_item_code + ' và tự duyệt' : 'Đã tạo ' + x.request_no + ' · gửi đúng ' + (x.current_owner || 'owner')); st.itemtab = 'list'; saveSt(); imRender(); }
+    function imImageSelection() { var fi = $('#im2file'), out = $('#imimagefiles'); if (!fi || !out) return; var errors = window.ItemWorkflow.validateImages(fi.files); out.textContent = errors.length ? errors.join(' ') : Array.from(fi.files).map(function (file) { return file.name; }).join(' · '); out.style.color = errors.length ? 'var(--bad)' : 'var(--muted)'; }
+    function imImageRemoveToggle(input) { if (!input || !input.checked) return; var label = input.closest('label'), radio = label && label.querySelector('input[name="imExistingPrimary"]'); if (radio) radio.checked = false; }
+    function imSmartCandidates() { if (IMSMART.existingSubItemCode || IMSMART.replacedSubItemCode) return []; var q = String(IMSMART.name || '').trim().toLowerCase(); if (q.length < 2) return []; var words = q.split(/\s+/).filter(function (w) { return w.length > 1; }); return IMD.items.map(function (x) { var s = (imVal(x, 'Item Name / Functional Spec') + ' ' + imVal(x, 'Legacy Item No')).toLowerCase(), score = words.filter(function (w) { return s.includes(w); }).length; return { x: x, score: score }; }).filter(function (r) { return r.score > 0; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3).map(function (r) { return r.x; }); }
+    function imSmartSelect(code) { IMSMART.item = code; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === code; }); if (it) { var b = $('#im2base'), c = $('#im2category'), d = $('#im2domain'); if (b) b.value = imVal(it, 'Functional UOM'); if (c) c.value = imVal(it, 'Category Code'); if (d) d.value = imVal(it, 'Domain'); } imSmartRefresh(); }
+    function imSmartPayload() {
+      var supplier = $('#im2supplier') ? $('#im2supplier').value.trim() : '';
+      var primary = document.querySelector('input[name="imExistingPrimary"]:checked');
+      var removals = Array.from(document.querySelectorAll('input[name="imRemoveImage"]:checked')).map(function (input) { return input.value; });
+      return { requestedName: $('#im2name').value.trim(), mode: IMSMART.mode, itemCode: IMSMART.item || '', existingSubItemCode: IMSMART.existingSubItemCode || '', replacedSubItemCode: IMSMART.replacedSubItemCode || '', domain: $('#im2domain').value, categoryCode: $('#im2category').value, brand: $('#im2brand').value.trim(), manufacturer: $('#im2manu').value.trim(), purchaseUom: $('#im2pu').value, conversionFactor: Number($('#im2factor').value), baseUom: $('#im2base').value, supplierNote: supplier, vendorCode: window.ItemWorkflow.vendorCode(supplier, typeof DB !== 'undefined' ? DB : []), exactOnly: !!($('#im2exact') && $('#im2exact').checked), primaryImageId: primary ? primary.value : null, removeImageIds: removals };
+    }
+    function imSmartRefresh() {
+      var wrap = $('#im2matches'); if (!wrap) return; var candidates = imSmartCandidates();
+      wrap.innerHTML = candidates.length ? '<div class="im2matches"><b style="font-size:10.5px">Có Item có thể dùng lại</b><p>Chọn để không tạo trùng functional Item.</p>' + candidates.map(function (x) { var code = imVal(x, 'Item Code'), selected = IMSMART.item === code; return '<button class="im2match ' + (selected ? 'sel' : '') + '" onclick="imSmartSelect(\'' + esc(code) + '\')"><p><b>' + esc(imVal(x, 'Item Name / Functional Spec')) + '</b><small>' + esc(code) + ' · ' + esc(imVal(x, 'Category Code')) + '</small></p><em>' + (selected ? '✓ Đã chọn' : 'Gắn vào Item này') + '</em></button>'; }).join('') + '</div>' : '';
+      var input = imSmartPayload(), item = IMD.items.find(function (x) { return x['Item Code'] === input.itemCode; }), decision = window.ItemWorkflow.approvalDecision(input, item), errors = window.ItemWorkflow.validate(input, item), preview = $('#im2preview');
+      preview.innerHTML = '<h3>⚡ Workflow</h3><ul><li><span>Nghiệp vụ</span><b>' + esc(decision.requestType) + '</b></li><li><span>Item</span><b>' + esc(input.itemCode || 'Tạo sau khi duyệt') + '</b></li><li><span>Sub Item nguồn</span><b>' + esc(input.existingSubItemCode || input.replacedSubItemCode || '—') + '</b></li><li><span>Ảnh</span><b>Product Content · item_images</b></li></ul><div class="im2decision ' + (decision.autoApproved && !errors.length ? 'ok' : 'warn') + '"><b>' + (errors.length ? '! Cần bổ sung dữ liệu' : decision.autoApproved ? '✓ Đủ điều kiện tự duyệt' : '! Gửi Approver') + '</b><small>' + esc(errors[0] || decision.reason) + '</small></div>';
+      var submit = $('#im2submit'); if (submit) submit.textContent = decision.autoApproved && !errors.length ? 'Tạo & hoàn tất' : 'Gửi yêu cầu';
+    }
+    async function imSmartSubmit() {
+      if (!imCanSubmit()) return toast('Bạn không có quyền gửi thay đổi Item.', 1);
+      var input = imSmartPayload(), item = IMD.items.find(function (x) { return x['Item Code'] === input.itemCode; }), errors = window.ItemWorkflow.validate(input, item), fi = $('#im2file'), imageErrors = window.ItemWorkflow.validateImages(fi && fi.files);
+      if (input.primaryImageId && input.removeImageIds.includes(input.primaryImageId)) errors.push('Ảnh chính không thể đồng thời bị gỡ.');
+      errors = errors.concat(imageErrors); if (errors.length) return toast(errors[0], 1);
+      var btn = $('#im2submit'); btn.disabled = true; btn.textContent = 'Đang xử lý…';
+      try {
+        var imagePaths = await window.ItemWorkflow.uploadImages(sb, fi && fi.files, me.email);
+        var changeType = window.ItemWorkflow.classify(input);
+        var primaryToggle = $('#im2primaryimage');
+        var response = await sb.rpc('mdm_submit_item_intake', { p_requested_name: input.requestedName, p_domain: window.ItemWorkflow.normalizeDomain(input.domain), p_category_code: input.categoryCode || null, p_item_code: input.itemCode || null, p_existing_sub_item_code: input.existingSubItemCode || null, p_replaced_sub_item_code: input.replacedSubItemCode || null, p_change_type: changeType, p_brand: input.brand || null, p_manufacturer: input.manufacturer || null, p_purchase_uom: input.purchaseUom || null, p_conversion_factor: input.conversionFactor || null, p_base_uom: input.baseUom || null, p_vendor_code: input.vendorCode || null, p_supplier_note: input.supplierNote || null, p_exact_only: input.exactOnly, p_image_paths: imagePaths, p_make_image_primary: !!(primaryToggle && primaryToggle.checked), p_primary_image_id: input.primaryImageId, p_remove_image_ids: input.removeImageIds, p_requester: me.email, p_idempotency_key: IMSMART.submissionKey });
+        if (response.error) throw response.error;
+        var result = response.data || {}; imSmartClose(); IMD = null; IMREQ = []; IMQ = input.requestedName; await itemMgmtView(); st.itemtab = result.auto_approved ? 'search' : 'work'; saveSt(); imRender(); toast(result.auto_approved ? 'Đã hoàn tất ' + (result.sub_item_code || result.request_no) : 'Đã tạo ' + result.request_no + ' · gửi ' + (result.current_owner || 'Approver'));
+      } catch (error) { console.error(error); btn.disabled = false; btn.textContent = 'Thử lại'; toast('Không gửi được yêu cầu: ' + error.message, 1); }
+    }
 
     async function itemsView() {
       await loadItems(); await signItemImages();
@@ -6700,307 +6970,7 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       setTimeout(showSupplierHelp, 500);
     }
 
-    // --- SCM IMPORT LOGIC ---
-    window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('scmFileInput')?.addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const contentDiv = document.getElementById('content');
-      const oldContent = contentDiv.innerHTML;
-      contentDiv.innerHTML = '<div class="imempty">Đang đẩy dữ liệu SCM lên Cloud... Xin vui lòng đợi!</div>';
-      
-      const reader = new FileReader();
-      reader.onload = async function(event) {
-        try {
-          const data = event.target.result;
-          const workbook = XLSX.read(data, {type: 'array'});
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(worksheet);
-          
-          if (rows.length === 0) { alert("File rỗng!"); contentDiv.innerHTML = oldContent; return; }
-          
-          const sanitizeNum = (val) => {
-            if (val == null || val === '') return null;
-            if (typeof val === 'string') val = val.replace(/,/g, '');
-            const num = Number(val);
-            return isNaN(num) ? null : num;
-          };
-          
-          const locationsMap = new Map();
-          const itemsMap = new Map();
-          const rawDataArray = [];
-          
-          for (const row of rows) {
-            const locCode = row['Location Code'];
-            const vendorCode = row['Vendor Code'];
-            const itemNo = row['Item No'];
-            if (locCode) locationsMap.set(locCode, { loc_code: locCode, region: row['Region'] || 'Unknown' });
-            if (itemNo) itemsMap.set(itemNo, { item_no: itemNo, description: row['Description'], category: row['Category'] || 'Other' });
-            
-            if (locCode && vendorCode && itemNo) {
-              rawDataArray.push({
-                loc_code: locCode, vendor_code: vendorCode, item_no: itemNo,
-                sub_desc: row['Sub Description'] || null, brand: row['Brand'] || null,
-                purch_unit: row['Purchase Unit'] || row['Purch. Unit'] || null, conversion: sanitizeNum(row['Conversion']),
-                base_unit: row['Base Unit'] || null, moq: sanitizeNum(row['MOQ / PO']), mov: sanitizeNum(row['MOV / PO']),
-                ship_if: row['SHIP if <MOQ/MOV'] || null, hsd: sanitizeNum(row['HSD (Ngày)']),
-                storage: row['Storage'] || row['Điều kiện bảo quản'] || null
-              });
-            }
-          }
-          
-          if (locationsMap.size > 0) await sb.from('locations').upsert(Array.from(locationsMap.values()));
-          if (itemsMap.size > 0) await sb.from('items').upsert(Array.from(itemsMap.values()));
-          
-          for (let i = 0; i < rawDataArray.length; i += 500) {
-            await sb.from('raw_data').upsert(rawDataArray.slice(i, i + 500));
-          }
-          
-          alert("Đã nhập dữ liệu thành công!");
-          await loadScmIntoIMD(); // Load newly inserted data into table
-        } catch(err) {
-          console.error(err);
-          alert("Lỗi khi nhập liệu: " + err.message);
-          contentDiv.innerHTML = oldContent;
-        }
-        document.getElementById('scmFileInput').value = '';
-      };
-      reader.readAsArrayBuffer(file);
-    });
-});
-
-        async function loadScmIntoIMD() {
-        try {
-            await sb.auth.getSession(); // Ensure session is loaded before querying
-            const { data: rawData, error } = await sb.from('raw_data').select('*, items!inner(description, category), vendor(name)');
-            if (error) throw error;
-            if (!rawData) return;
-            
-            if (window.IMD && window.IMD.subItems) {
-                // Remove old SCM items
-                window.IMD.subItems = window.IMD.subItems.filter(item => !item['_is_scm']);
-                if (window.IMD.offers) window.IMD.offers = window.IMD.offers.filter(o => !o['_is_scm']);
-                if (window.IMD.items) window.IMD.items = window.IMD.items.filter(i => !i['_is_scm']);
-                
-                const mappedSubs = rawData.map(r => ({
-                    'Item Code': r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Sub Item Name': r.sub_desc || r.items.description,
-                    'Brand': r.brand || '',
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'Shelf Life Days': r.hsd,
-                    'Storage': r.storage,
-                    'Status': 'Active',
-                    '_is_scm': true,
-                    'Vendor Name': r.vendor?.name || r.vendor_code
-                }));
-                
-                window.IMD.subItems = window.IMD.subItems.concat(mappedSubs);
-                
-                const mappedOffers = rawData.map(r => ({
-                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Vendor Code': r.vendor_code,
-                    'Vendor Name': r.vendor?.name || r.vendor_code,
-                    'Location Code': r.loc_code,
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'MOQ': r.moq,
-                    '_is_scm': true
-                }));
-                if (!window.IMD.offers) window.IMD.offers = [];
-                window.IMD.offers = window.IMD.offers.concat(mappedOffers);
-                
-                // Add unique items to IMD.items
-                const itemSet = new Set();
-                const uniqueItems = [];
-                rawData.forEach(r => {
-                    if (!itemSet.has(r.item_no)) {
-                        itemSet.add(r.item_no);
-                        uniqueItems.push({
-                            'Item Code': r.item_no,
-                            'Item Name / Functional Spec': r.items?.description || r.item_no,
-                            'Category Code': r.items?.category || 'Cinemunch',
-                            'Domain': 'F&B',
-                            'Allocation': 'FIFO',
-                            'Functional UOM': r.base_unit || 'cái',
-                            '_is_scm': true
-                        });
-                    }
-                });
-                
-                // Filter out any that already exist in static data just in case
-                const existingItemCodes = new Set(window.IMD.items.map(i => i['Item Code']));
-                const newItemsToAdd = uniqueItems.filter(i => !existingItemCodes.has(i['Item Code']));
-                window.IMD.items = window.IMD.items.concat(newItemsToAdd);
-                
-                // Trigger re-render by switching back to the view
-                st.itemtab = 'list';
-                if (typeof imRender === 'function') {
-                    imRender(); 
-                }
-            }
-        } catch (e) {
-            console.error("Failed to load SCM data", e);
-        }
-    }
-    // --- END SCM IMPORT LOGIC ---
-
-    // --- SCM IMPORT LOGIC ---
-    window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('scmFileInput')?.addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const contentDiv = document.getElementById('content');
-      const oldContent = contentDiv.innerHTML;
-      contentDiv.innerHTML = '<div class="imempty">Đang đẩy dữ liệu SCM lên Cloud... Xin vui lòng đợi!</div>';
-      
-      const reader = new FileReader();
-      reader.onload = async function(event) {
-        try {
-          const data = event.target.result;
-          const workbook = XLSX.read(data, {type: 'array'});
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(worksheet);
-          
-          if (rows.length === 0) { alert("File rỗng!"); contentDiv.innerHTML = oldContent; return; }
-          
-          const sanitizeNum = (val) => {
-            if (val == null || val === '') return null;
-            if (typeof val === 'string') val = val.replace(/,/g, '');
-            const num = Number(val);
-            return isNaN(num) ? null : num;
-          };
-          
-          const locationsMap = new Map();
-          const itemsMap = new Map();
-          const rawDataArray = [];
-          
-          for (const row of rows) {
-            const locCode = row['Location Code'];
-            const vendorCode = row['Vendor Code'];
-            const itemNo = row['Item No'];
-            if (locCode) locationsMap.set(locCode, { loc_code: locCode, region: row['Region'] || 'Unknown' });
-            if (itemNo) itemsMap.set(itemNo, { item_no: itemNo, description: row['Description'], category: row['Category'] || 'Other' });
-            
-            if (locCode && vendorCode && itemNo) {
-              rawDataArray.push({
-                loc_code: locCode, vendor_code: vendorCode, item_no: itemNo,
-                sub_desc: row['Sub Description'] || null, brand: row['Brand'] || null,
-                purch_unit: row['Purchase Unit'] || row['Purch. Unit'] || null, conversion: sanitizeNum(row['Conversion']),
-                base_unit: row['Base Unit'] || null, moq: sanitizeNum(row['MOQ / PO']), mov: sanitizeNum(row['MOV / PO']),
-                ship_if: row['SHIP if <MOQ/MOV'] || null, hsd: sanitizeNum(row['HSD (Ngày)']),
-                storage: row['Storage'] || row['Điều kiện bảo quản'] || null
-              });
-            }
-          }
-          
-          if (locationsMap.size > 0) await sb.from('locations').upsert(Array.from(locationsMap.values()));
-          if (itemsMap.size > 0) await sb.from('items').upsert(Array.from(itemsMap.values()));
-          
-          for (let i = 0; i < rawDataArray.length; i += 500) {
-            await sb.from('raw_data').upsert(rawDataArray.slice(i, i + 500));
-          }
-          
-          alert("Đã nhập dữ liệu thành công!");
-          await loadScmIntoIMD(); // Load newly inserted data into table
-        } catch(err) {
-          console.error(err);
-          alert("Lỗi khi nhập liệu: " + err.message);
-          contentDiv.innerHTML = oldContent;
-        }
-        document.getElementById('scmFileInput').value = '';
-      };
-      reader.readAsArrayBuffer(file);
-    });
-});
-
-        async function loadScmIntoIMD() {
-        try {
-            await sb.auth.getSession(); // Ensure session is loaded before querying
-            const { data: rawData, error } = await sb.from('raw_data').select('*, items!inner(description, category), vendor(name)');
-            if (error) throw error;
-            if (!rawData) return;
-            
-            if (window.IMD && window.IMD.subItems) {
-                // Remove old SCM items
-                window.IMD.subItems = window.IMD.subItems.filter(item => !item['_is_scm']);
-                if (window.IMD.offers) window.IMD.offers = window.IMD.offers.filter(o => !o['_is_scm']);
-                if (window.IMD.items) window.IMD.items = window.IMD.items.filter(i => !i['_is_scm']);
-                
-                const mappedSubs = rawData.map(r => ({
-                    'Item Code': r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Sub Item Name': r.sub_desc || r.items.description,
-                    'Brand': r.brand || '',
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'Shelf Life Days': r.hsd,
-                    'Storage': r.storage,
-                    'Status': 'Active',
-                    '_is_scm': true,
-                    'Vendor Name': r.vendor?.name || r.vendor_code
-                }));
-                
-                window.IMD.subItems = window.IMD.subItems.concat(mappedSubs);
-                
-                const mappedOffers = rawData.map(r => ({
-                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Vendor Code': r.vendor_code,
-                    'Vendor Name': r.vendor?.name || r.vendor_code,
-                    'Location Code': r.loc_code,
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'MOQ': r.moq,
-                    '_is_scm': true
-                }));
-                if (!window.IMD.offers) window.IMD.offers = [];
-                window.IMD.offers = window.IMD.offers.concat(mappedOffers);
-                
-                // Add unique items to IMD.items
-                const itemSet = new Set();
-                const uniqueItems = [];
-                rawData.forEach(r => {
-                    if (!itemSet.has(r.item_no)) {
-                        itemSet.add(r.item_no);
-                        uniqueItems.push({
-                            'Item Code': r.item_no,
-                            'Item Name / Functional Spec': r.items?.description || r.item_no,
-                            'Category Code': r.items?.category || 'Cinemunch',
-                            'Domain': 'F&B',
-                            'Allocation': 'FIFO',
-                            'Functional UOM': r.base_unit || 'cái',
-                            '_is_scm': true
-                        });
-                    }
-                });
-                
-                // Filter out any that already exist in static data just in case
-                const existingItemCodes = new Set(window.IMD.items.map(i => i['Item Code']));
-                const newItemsToAdd = uniqueItems.filter(i => !existingItemCodes.has(i['Item Code']));
-                window.IMD.items = window.IMD.items.concat(newItemsToAdd);
-                
-                // Trigger re-render by switching back to the view
-                st.itemtab = 'list';
-                if (typeof imRender === 'function') {
-                    imRender(); 
-                }
-            }
-        } catch (e) {
-            console.error("Failed to load SCM data", e);
-        }
-    }
-    // --- END SCM IMPORT LOGIC ---
   </script>
-<input type="file" id="scmFileInput" accept=".xlsx, .csv" style="display:none;" />
 </body>
 
 </html>

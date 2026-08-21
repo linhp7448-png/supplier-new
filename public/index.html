@@ -2814,9 +2814,7 @@
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4-4" />
         </svg><input id="q" placeholder="Tìm trong màn hình hiện tại…"></div>
-      <div class="who"><span id="who"></span><button class="tbtn"
-          style="color:var(--accent-d);border-color:var(--accent);font-weight:600" onclick="showSupplierHelp()">💡 Hướng
-          dẫn</button><button class="tbtn" onclick="openKeyModal()"
+      <div class="who"><span id="who"></span><button class="tbtn" onclick="openKeyModal()"
           title="Cấu hình Gemini API key cho tính năng Điền tự động (AI)">🔑 Gemini</button><button class="tbtn"
           onclick="logout()">Đăng xuất</button></div>
     </div>
@@ -2957,7 +2955,7 @@
         RZ = { res: res, required: !!opts.required };
         $('#rztitle').textContent = title;
         $('#rzhint').textContent = opts.hint || ''; $('#rzhint').style.display = opts.hint ? 'block' : 'none';
-        $('#rzlabel').textContent = opts.required ? 'Lý do (bắt buộc)' : 'Ghi chú / lý do (không bắt buộc)';
+        $('#rzlabel').textContent = opts.label ? opts.label : (opts.required ? 'Lý do (bắt buộc)' : 'Ghi chú / lý do (không bắt buộc)');
         $('#rztext').value = ''; $('#rzerr').textContent = '';
         var ok = $('#rzok'); ok.textContent = opts.okLabel || 'Xác nhận'; ok.className = 'btn ' + (opts.danger ? 'danger' : 'pri'); ok.onclick = rzOk;
         $('#rzoverlay').classList.add('open'); setTimeout(function () { $('#rztext').focus(); }, 0);
@@ -3025,8 +3023,25 @@
       if (h.length && h[0].date) fset('reg_first_date', h[0].date); card(); openTab('addr');
     }
     async function loadItems() {
-      var r = await sb.from('item_master').select('*');
-      ITEMS = {}; (r.data || []).forEach(function (it) { ITEMS[it.item_no] = it; });
+      if (typeof IMD === 'undefined' || !IMD || !IMD.items) {
+          try { await loadScmIntoIMD(); } catch(e) {}
+      }
+      var r1 = await imFetchAll('item_master', 'item_no');
+      ITEMS = {}; 
+      
+      function val(x, k) { var v = typeof imVal === 'function' ? imVal(x, k) : (x[k]||''); return v === '' ? '' : v; }
+      if (typeof IMD !== 'undefined' && IMD && IMD.items) {
+          IMD.items.forEach(function (x) {
+              var code = val(x, 'Item Code'), subcode = val(x, 'Sub Item Code');
+              if (code && !ITEMS[code]) ITEMS[code] = { item_no: code, name: val(x, 'Item Name / Functional Spec'), uom: val(x, 'Functional UOM'), category: val(x, 'Category Code') };
+              if (subcode && !ITEMS[subcode]) ITEMS[subcode] = { item_no: subcode, name: val(x, 'Sub Item Name'), uom: val(x, 'Base UOM'), category: val(x, 'Category Code') };
+          });
+      }
+      (r1.data || []).forEach(function (it) { 
+          if (!ITEMS[it.item_no]) ITEMS[it.item_no] = { item_no: it.item_no };
+          ITEMS[it.item_no].image_path = it.image_path;
+          ITEMS[it.item_no].image_url = it.image_url;
+      });
       return ITEMS;
     }
     function itemImg(item_no, size) {
@@ -3135,7 +3150,7 @@
           { l: 'Good Receive', dis: 1, ic: 'box', desc: 'Quản lý phiếu nhập kho' },
           { l: 'Good Return', dis: 1, ic: 'box', desc: 'Quản lý phiếu trả hàng' },
           { l: '3-Way Matching', dis: 1, ic: 'reel', desc: 'Đối chiếu 3 bước (PO - GR - Hóa đơn)' },
-          { l: 'Quản lý mặt hàng (ảnh SP)', v: 'items', ic: 'box', desc: 'Quản lý hình ảnh và chi tiết mặt hàng lúc giao nhận' },
+          { l: 'Quản lý mặt hàng (ảnh SP)', v: 'items', ic: 'box', desc: 'Quản lý hình ảnh và chi tiết mặt hàng lúc giao nhận (kế thừa từ item management trong tab golden record)' },
           { l: 'Quy định giao nhận', v: 'dloc', ic: 'dloc', desc: 'Quy định và vị trí giao nhận' }
         ]
       }
@@ -3162,6 +3177,13 @@
       if (it.ps !== undefined) st.postatus = it.ps;
       if (it.it !== undefined) st.itemtab = it.it;
       st.view = it.v; saveSt(); navSetActive(it.v); render(); flyClose();
+      
+      if (st.view === 'itemmgmt') {
+          var helpTab = st.itemtab || 'work';
+          if (typeof IMHELP !== 'undefined' && IMHELP[helpTab] && !localStorage.getItem('noShowHelp_' + helpTab)) {
+              setTimeout(function() { if (typeof imHelpOpen === 'function') imHelpOpen(helpTab); }, 150);
+          }
+      }
     }
     document.addEventListener('click', function (e) { var f = $('#flyout'); if (f && f.classList.contains('open') && !f.contains(e.target) && !e.target.closest('.navmain')) flyClose(); });
     
@@ -3431,7 +3453,7 @@
       if (st.view === 'users') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý người dùng</div>`; return; }
 
       if (st.view === 'inactiveReq') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Đề nghị ngừng hoạt động NCC</div>`; return; }
-      if (st.view === 'items') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý mặt hàng & ảnh sản phẩm</div><input class="f" id="fitem" placeholder="Tìm mã/tên hàng..." style="margin-left:12px;min-width:220px"><button class="tbtn pri" style="margin-left:8px" onclick="itemAdd()">+ Thêm mặt hàng</button>`; setTimeout(function () { var fi = $('#fitem'); if (fi) fi.oninput = function () { itemsRender(this.value); }; }, 0); return; }
+      if (st.view === 'items') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý mặt hàng & ảnh sản phẩm<div style="font-size:12px;color:var(--muted);font-weight:normal;margin-top:2px">(Dữ liệu kế thừa từ Item Management trong tab Golden Record)</div></div><input class="f" id="fitem" placeholder="Tìm mã/tên hàng..." style="margin-left:12px;min-width:220px"><button class="tbtn pri" style="margin-left:8px" onclick="itemAdd()">+ Thêm mặt hàng</button><button class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4; color:#2b6cb0" onclick="document.getElementById('bulkImgInput').click()">🖼 Tải nhiều ảnh</button><button class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4; color:#1890ff" onclick="bulkPasteUrls()">📋 Dán URL hàng loạt</button>`; setTimeout(function () { var fi = $('#fitem'); if (fi) fi.oninput = function () { itemsRender(this.value); }; }, 0); return; }
       if (st.view === 'promos') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Khuyến mãi / banner cổng NCC</div>`; return; }
       if (st.view === 'po') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Đơn mua (PO)</div><select class="f" id="fpo" style="margin-left:12px"><option value="">Mọi trạng thái</option>' + ['Draft', 'Pending_Approval', 'Sent_to_Supplier', 'Supplier_Confirmed', 'Delivered', 'Supplier_Rejected', 'Rejected'].map(s => '<option ' + (st.postatus === s ? 'selected' : '') + ' value="' + s + '">' + s + '</option>').join('') + '</select>' + (function () { var b = ''; var s = st.postatus; if (!s || s === 'Draft') b += '<button class="tbtn" onclick="poBulk(\'submit\')">Gửi duyệt (chọn)</button>'; if ((!s || s === 'Pending_Approval') && can('approve')) b += '<button class="tbtn pri" onclick="poBulk(\'approve\')">Duyệt (chọn)</button><button class="tbtn" style="color:var(--bad)" onclick="poBulk(\'reject\')">Từ chối (chọn)</button>'; return b ? '<span class="tsep"></span>' + b : ''; })() + '<span class="count">' + POS.length + ' PO</span>'; const fp = $('#fpo'); if (fp) fp.onchange = e => { st.postatus = e.target.value; saveSt(); renderPO(); }; return; }
       const B = (l, fn, dis, pri) => `<button class="tbtn ${pri ? 'pri' : ''}" ${dis ? 'disabled' : ''} onclick="${fn}">${l}</button>`;
@@ -5056,6 +5078,10 @@ function imOverview() {
         + '<div class="imhbody">'
         + '<div class="imhrules"><div class="imhrt">📌 Quy tắc cần nhớ</div><ul>' + rules + '</ul></div>'
         + '<div class="imhrt" style="margin-top:14px">👣 Các bước làm</div>' + steps
+        + '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">'
+        + '<label style="font-size:13px;color:#4a5568;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" onchange="localStorage.setItem(\'noShowHelp_\' + \'' + tab + '\', this.checked ? \'1\' : \'\');" ' + (localStorage.getItem('noShowHelp_' + tab) ? 'checked' : '') + '> <b>Không hiển thị lại lúc chuyển tab</b></label>'
+        + '<button class="btn pri" onclick="imHelpClose()">Đã hiểu</button>'
+        + '</div>'
         + '</div></div></div>';
       var d = document.createElement('div'); d.id = 'imhelpwrap'; d.innerHTML = html; document.body.appendChild(d);
     }
@@ -6686,17 +6712,20 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       var arr = Object.values(ITEMS).filter(function (it) { return !q || (it.item_no || '').toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q); });
       arr.sort(function (a, b) { return String(a.item_no).localeCompare(String(b.item_no), 'vi', { numeric: true }); });
       var out = '<div style="max-width:1000px"><div style="color:var(--muted);font-size:13px;margin-bottom:12px">Ảnh khai báo ở đây sẽ hiển thị trên dòng PO cho cả nội bộ và cổng NCC. Dán URL ảnh (nhanh) hoặc tải ảnh lên.</div>';
-      if (!arr.length) out += '<div style="color:var(--faint)">Chưa có mặt hàng nào. Bấm "+ Thêm mặt hàng".</div>';
+      if (!arr.length) out += '<div style="color:var(--faint)">Chưa có mặt hàng nào. Mặt hàng sẽ tự động xuất hiện ở đây sau khi được tạo và duyệt từ tab Item Management (Golden Record).</div>';
       else {
+        var isTrimmed = arr.length > 200;
+        if (isTrimmed) arr = arr.slice(0, 200);
+        if (isTrimmed) out += '<div style="color:#d97706;font-size:12px;margin-bottom:8px;padding:6px;background:#fef3c7;border-radius:4px">⚠️ Đang hiển thị 200 kết quả đầu tiên. Vui lòng gõ vào ô Tìm kiếm ở góc trên để tìm chính xác mặt hàng.</div>';
         out += '<table class="mini"><thead><tr><th>Ảnh</th><th>Mã hàng</th><th>Tên</th><th>ĐVT</th><th>Nhóm</th><th>URL ảnh / Tải lên</th><th></th></tr></thead><tbody>';
         arr.forEach(function (it) {
           out += '<tr><td>' + itemImg(it.item_no, 40) + '</td>'
             + '<td><b>' + esc(it.item_no) + '</b></td>'
-            + '<td><input id="it_name_' + esc(it.item_no) + '" value="' + esc(it.name || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:140px"></td>'
-            + '<td><input id="it_uom_' + esc(it.item_no) + '" value="' + esc(it.uom || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:60px"></td>'
-            + '<td><input id="it_cat_' + esc(it.item_no) + '" value="' + esc(it.category || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:110px"></td>'
+            + '<td><input id="it_name_' + esc(it.item_no) + '" value="' + esc(it.name || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:140px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
+            + '<td><input id="it_uom_' + esc(it.item_no) + '" value="' + esc(it.uom || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:60px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
+            + '<td><input id="it_cat_' + esc(it.item_no) + '" value="' + esc(it.category || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:110px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
             + '<td><input id="it_url_' + esc(it.item_no) + '" value="' + esc(it.image_url || '') + '" placeholder="https://... ảnh" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:150px"><input type="file" id="it_file_' + esc(it.item_no) + '" accept="image/*" style="font-size:11px;width:150px;margin-top:3px"></td>'
-            + '<td style="white-space:nowrap"><button class="btn pri" style="font-size:11px;padding:4px 8px" onclick="itemSave(\'' + esc(it.item_no) + '\')">Lưu</button> <button class="btn" style="font-size:11px;padding:4px 8px;color:var(--bad)" onclick="itemDel(\'' + esc(it.item_no) + '\')">×</button></td></tr>';
+            + '<td style="white-space:nowrap"><button class="btn pri" style="font-size:11px;padding:4px 8px;margin-right:4px" onclick="itemSave(\'' + esc(it.item_no) + '\')">Lưu ảnh</button><button class="btn danger" style="font-size:11px;padding:4px 8px" onclick="itemDel(\'' + esc(it.item_no) + '\')">Xóa</button></td></tr>';
         });
         out += '</tbody></table>';
       }
@@ -6704,14 +6733,15 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       $('#content').innerHTML = out;
     }
     async function itemAdd() {
-      var code = await reasonBox('Thêm mặt hàng mới', { required: true, okLabel: 'Tạo', hint: 'Nhập MÃ HÀNG (khớp item_no dùng trên PO). VD: BOFF001' });
+      var code = await reasonBox('Thêm mặt hàng mới', { required: true, okLabel: 'Tạo', label: 'Nhập MÃ HÀNG (khớp ITEM CODE trên Golden Record):', hint: 'VD: DONUTCHOCO' });
       if (code === null) return; code = code.trim(); if (!code) return;
-      var r = await sb.from('item_master').upsert({ item_no: code, updated_by: me.email, updated_at: new Date().toISOString() }, { onConflict: 'item_no' });
-      if (r.error) return toast('Lỗi: ' + r.error.message, 1); toast('Đã thêm ' + code); itemsView();
+      var payload = { item_no: code, updated_by: me.email, updated_at: new Date().toISOString() };
+      var r = await sb.from('item_master').upsert(payload, { onConflict: 'item_no' });
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1); toast('Đã thêm ' + code); await itemsView();
     }
     async function itemSave(code) {
       var g = function (p) { var e = $('#it_' + p + '_' + code); return e ? e.value : ''; };
-      var payload = { item_no: code, name: g('name'), uom: g('uom'), category: g('cat'), image_url: g('url') || null, updated_by: me.email, updated_at: new Date().toISOString() };
+      var payload = { item_no: code, image_url: g('url') || null, updated_by: me.email, updated_at: new Date().toISOString() };
       var fi = $('#it_file_' + code);
       if (fi && fi.files && fi.files[0]) {
         var f = fi.files[0]; var path = 'items/' + code.replace(/[^\w.\-]/g, '_') + '_' + Date.now() + '_' + f.name.replace(/[^\w.\-]/g, '_');
@@ -7399,7 +7429,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
 
     init();
     if (!localStorage.getItem('hide_supplier_help') && (!st.view || st.view === 'sm' || st.view === '')) {
-      setTimeout(showSupplierHelp, 500);
+      // setTimeout(showSupplierHelp, 500);
     }
 
     // --- SCM IMPORT LOGIC ---
@@ -7552,7 +7582,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
             var rawData = [];
             var fromIdx = 0, sizeIdx = 1000;
             while (true) {
-                const { data: chunk, error } = await sb.from('raw_data').select('*, items!inner(description, category, image_url), vendor(name)').range(fromIdx, fromIdx + sizeIdx - 1);
+                const { data: chunk, error } = await sb.from('raw_data').select('*, items(description, category, image_url), vendor(name)').range(fromIdx, fromIdx + sizeIdx - 1);
                 if (error) throw error;
                 if (!chunk) break;
                 rawData = rawData.concat(chunk);
@@ -7560,6 +7590,10 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                 fromIdx += sizeIdx;
             }
             if (!rawData) return;
+            
+            if (!window.IMD) window.IMD = { items: [], subItems: [], offers: [] };
+            if (!window.IMD.subItems) window.IMD.subItems = [];
+            if (!window.IMD.items) window.IMD.items = [];
             
             if (window.IMD && window.IMD.subItems) {
                 // Remove old SCM items
@@ -7837,7 +7871,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
             var rawData = [];
             var fromIdx = 0, sizeIdx = 1000;
             while (true) {
-                const { data: chunk, error } = await sb.from('raw_data').select('*, items!inner(description, category, image_url), vendor(name)').range(fromIdx, fromIdx + sizeIdx - 1);
+                const { data: chunk, error } = await sb.from('raw_data').select('*, items(description, category, image_url), vendor(name)').range(fromIdx, fromIdx + sizeIdx - 1);
                 if (error) throw error;
                 if (!chunk) break;
                 rawData = rawData.concat(chunk);
@@ -7845,6 +7879,10 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                 fromIdx += sizeIdx;
             }
             if (!rawData) return;
+            
+            if (!window.IMD) window.IMD = { items: [], subItems: [], offers: [] };
+            if (!window.IMD.subItems) window.IMD.subItems = [];
+            if (!window.IMD.items) window.IMD.items = [];
             
             if (window.IMD && window.IMD.subItems) {
                 // Remove old SCM items
@@ -7925,6 +7963,56 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         }
     }
     // --- END SCM IMPORT LOGIC ---
+    
+    // --- BULK PASTE URL LOGIC ---
+    function bulkPasteUrls() {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      overlay.className = 'overlay-bulk';
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#fff;padding:24px;border-radius:12px;width:600px;max-width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2)';
+      box.innerHTML = `
+        <h3 style="margin-top:0">Dán danh sách URL (Hàng loạt)</h3>
+        <div style="font-size:13px;color:#666;margin-bottom:12px">Copy 2 cột (<b>Mã Hàng</b> và <b>URL Ảnh</b>) từ Excel và dán (Ctrl+V) vào ô bên dưới. Mỗi dòng là 1 mặt hàng. Phân cách nhau bằng dấu Tab.</div>
+        <textarea id="bulkUrlArea" style="width:100%;height:300px;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:monospace;white-space:pre"></textarea>
+        <div style="margin-top:16px;text-align:right">
+          <button class="tbtn" style="background:#f0f2f5;border:1px solid #c9cdd4;margin-right:8px" onclick="this.closest('.overlay-bulk').remove()">Hủy</button>
+          <button class="tbtn pri" onclick="processBulkUrls(this)">Lưu hàng loạt</button>
+        </div>
+      `;
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      setTimeout(() => document.getElementById('bulkUrlArea').focus(), 100);
+    }
+    
+    async function processBulkUrls(btn) {
+      const text = document.getElementById('bulkUrlArea').value.trim();
+      if (!text) return;
+      btn.innerHTML = 'Đang xử lý...';
+      btn.disabled = true;
+      const lines = text.split('\\n');
+      let success = 0, errs = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const parts = lines[i].split('\\t'); // Excel copy uses tabs
+        if (parts.length < 2) continue;
+        const code = parts[0].trim().toUpperCase();
+        const url = parts[1].trim();
+        if (!code || !url) continue;
+        try {
+          // Cập nhật SCM DB (raw_data)
+          await sb.from('raw_data').update({ image_url: url }).eq('item_no', code);
+          // Cập nhật item_master
+          await sb.from('item_master').upsert({ item_no: code, image_url: url }, { onConflict: 'item_no' });
+          // Cập nhật local memory
+          if (window.IMD && window.IMD.items) { var _it = window.IMD.items.find(x => x['Item Code'] === code); if (_it) _it.image_url = url; }
+          success++;
+        } catch (e) { errs++; console.error(e); }
+      }
+      alert('Đã hoàn tất!\\nThành công: ' + success + '\\nLỗi: ' + errs);
+      btn.closest('.overlay-bulk').remove();
+      if (success > 0 && typeof itemsView === 'function') itemsView();
+    }
+    // --- END BULK PASTE URL LOGIC ---
   </script>
 <input type="file" id="bulkImgInput" accept="image/*" multiple style="display:none;" />
 <input type="file" id="scmFileInput" accept=".xlsx, .xls, .csv, image/*" multiple style="display:none;" />
@@ -7961,7 +8049,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                 
                 try {
                     const ext = file.name.split('.').pop();
-                    const filePath = `${name.toUpperCase()}-${Date.now()}.${ext}`;
+                    const filePath = name.toUpperCase() + '-' + Date.now() + '.' + ext;
                     // Upload lên SCM Storage
                     const { data, error } = await sb.storage.from('item_images').upload(filePath, file);
                     if (error) throw error;
@@ -7971,6 +8059,10 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                     // Cập nhật SCM DB (raw_data)
                     const { error: dbErr } = await sb.from('raw_data').update({ image_url: publicUrl }).eq('item_no', name.toUpperCase());
                     if (dbErr) throw dbErr;
+                    
+                    // Cập nhật item_master
+                    const { error: imErr } = await sb.from('item_master').upsert({ item_no: name.toUpperCase(), image_url: publicUrl }, { onConflict: 'item_no' });
+                    if (imErr) console.error(imErr);
                     
                     // Cập nhật local memory
                     if (window.IMD && window.IMD.items) { var _it = window.IMD.items.find(function(x){ return x['Item Code'] === name.toUpperCase(); }); if (_it) _it.image_url = publicUrl; }
@@ -7986,11 +8078,10 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
             e.target.value = '';
             if (btn) btn.innerHTML = '🖼 Tải nhiều ảnh';
             
-            alert(`Đã tải lên hoàn tất!\nThành công: ${success}\nLỗi: ${errs}`);
+            alert('Đã tải lên hoàn tất!\\nThành công: ' + success + '\\nLỗi: ' + errs);
             
-            if (success > 0 && typeof imLoadV2 === 'function') {
-                window.IMD = null;
-                if (typeof itemMgmtView === 'function') itemMgmtView();
+            if (success > 0) {
+                if (typeof itemsView === 'function') itemsView();
             }
         });
     });

@@ -4903,6 +4903,7 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
                 delete c._status;
                 delete c._warning;
                 delete c._checked;
+                delete c._diffs;
                 
                 if (r._status === 'NEW') toInsert.push(c);
                 else if (r._status === 'MODIFIED') toUpdate.push(c);
@@ -4944,17 +4945,33 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
                  
       root += '<div class="impanel" style="padding:0;max-height:calc(100vh - 220px);overflow:auto"><table class="imtbl"><thead><tr><th style="width:30px">☑</th><th>Vendor</th><th>Location</th><th>Item No</th><th>Specs</th><th>Brand</th><th>UOM</th><th>MOQ</th><th>Thay Đổi</th></tr></thead><tbody>';
       
-      d.forEach((x, idx) => {
+            d.forEach((x, idx) => {
           var bg = x._status === 'NEW' ? '#f0fff4' : (x._status === 'MODIFIED' ? '#fffff0' : '#fff');
           var st = x._status === 'NEW' ? '<span class="impill ok">MỚI</span>' : '<span class="impill warn">SỬA ĐỔI</span>';
+          
+          const hl = (field) => {
+              if (x._diffs && x._diffs[field]) return `style="background:#fef08a;color:#92400e;font-weight:bold;cursor:help" title="${esc(x._diffs[field])}"`;
+              return '';
+          };
+          const hlUom = () => {
+              if (x._diffs && (x._diffs['UOM'] || x._diffs['Conv'] || x._diffs['Base'])) {
+                  let tooltip = [];
+                  if (x._diffs['UOM']) tooltip.push('UOM ' + x._diffs['UOM']);
+                  if (x._diffs['Conv']) tooltip.push('Conv ' + x._diffs['Conv']);
+                  if (x._diffs['Base']) tooltip.push('Base ' + x._diffs['Base']);
+                  return `style="background:#fef08a;color:#92400e;font-weight:bold;cursor:help" title="${esc(tooltip.join(' | '))}"`;
+              }
+              return '';
+          };
+
           root += '<tr style="background:' + bg + '"><td><input type="checkbox" ' + (x._checked ? 'checked' : '') + ' onchange="imScmDraftToggle(' + idx + ')"></td>' +
                   '<td>' + esc(x.vendor_code) + '</td>' + 
                   '<td>' + esc(x.loc_code) + '</td>' + 
                   '<td class="imcode">' + esc(x.item_no) + '</td>' + 
-                  '<td>' + esc(x.sub_desc) + '</td>' + 
-                  '<td>' + esc(x.brand) + '</td>' + 
-                  '<td>' + esc(x.purch_unit) + (x.conversion ? ' (' + x.conversion + ' ' + (x.base_unit||'') + ')' : '') + '</td>' + 
-                  '<td>' + esc(x.moq) + '</td>' + 
+                  '<td ' + hl('Specs') + '>' + esc(x.sub_desc) + '</td>' + 
+                  '<td ' + hl('Brand') + '>' + esc(x.brand) + '</td>' + 
+                  '<td ' + hlUom() + '>' + esc(x.purch_unit) + (x.conversion ? ' (' + x.conversion + ' ' + (x.base_unit||'') + ')' : '') + '</td>' + 
+                  '<td ' + hl('MOQ') + '>' + esc(x.moq) + '</td>' + 
                   '<td>' + st + (x._warning ? '<br><span style="color:#c0392b;font-size:11px;font-weight:bold">' + x._warning + '</span>' : '') + '</td></tr>';
       });
       root += '</tbody></table></div>';
@@ -4975,6 +4992,19 @@ function imOverview() {
 
     // ============ HELP — sách hướng dẫn từng tab ============
     var IMHELP = {
+      multi_add: {
+        icon: '📝', title: 'Thêm nhiu sản phẩm (Grid)',
+        rules: [
+          'Bảng này ĐÃ ĐỒNG BỘ 100% CỘT với file Excel "Khai báo SP mới" của công ty.',
+          'Nên bôi đen và Copy (Ctrl+C) nguyên một dải dữ liệu nhiều dòng nhiều cột từ Excel rồi Paste (Ctrl+V) vào ô đầu tiên để đạt tốc độ tối đa.',
+          'Hệ thống tự động thông minh: Dấu phẩy (,) trong các cột số thập phân (như 22,68) sẽ tự chuyển thành dấu chấm chuẩn (22.68).'
+        ],
+        steps: [
+          '<b>B1 (Chép Chữ):</b> Mở Excel, bôi đen các dòng cần thêm, ấn <b>Ctrl + C</b>. Quay lại Web, nhấp vào ô trên cùng bên trái, ấn <b>Ctrl + V</b>.',
+          '<b>B2 (Chép Ảnh):</b> Bấm nút <b>📸 Tải ảnh đính kèm</b> ở dưới bảng. Quét chọn nhiều ảnh. <i>Lưu ý: Tên file ảnh phải đặt trùng với cột Mã Hàng (Item No).</i>',
+          '<b>B3 (Lưu hệ thống):</b> Bấm <b>Xác nhận dữ liệu</b>. Hệ thống tự động ghép ảnh vào chữ và chuyển qua màn hình Chờ Duyệt (Draft).'
+        ]
+      },
       work: {
         icon: '📊', title: 'Công việc của tôi',
         rules: ['Đây là màn tổng quan — cho biết còn việc gì cần xử lý.', 'KPI trên cùng là số liệu THẬT từ dữ liệu (Item Active, Sub Item, % auto-duyệt, việc cần xử lý).', '"Vừa tự động xử lý" = các yêu cầu hệ thống tự duyệt (đúng rule thì không cần người).', 'Chỉ những ngoại lệ (trùng, UOM lạ, thiếu spec) mới cần bạn xử lý.'],
@@ -5806,6 +5836,181 @@ function imOverview() {
       var key = keymap ? (keymap[f.col] || f.col) : f.col;
       return rows.filter(function (r) { return String(r[key] == null ? '' : r[key]) === f.val; });
     }
+    
+    var fieldMap = {
+        'Brand': { table: 'raw_data', col: 'brand' },
+        'Purchase UOM': { table: 'raw_data', col: 'purch_unit' },
+        'Conversion': { table: 'raw_data', col: 'conversion', isNum: true },
+        'Base UOM': { table: 'raw_data', col: 'base_unit' },
+        'Shelf Life Days': { table: 'raw_data', col: 'hsd', isNum: true },
+        'Storage': { table: 'raw_data', col: 'storage' },
+        'Item Name (Core)': { table: 'items', col: 'description' },
+        'Sub Item Name (Physical)': { table: 'raw_data', col: 'sub_desc' }
+    };
+
+    window.imInlineEditSave = async function(el, colName, sid, oVal, newVal) {
+        var map = fieldMap[colName];
+        if (!map) {
+            alert('Cột này không hỗ trợ sửa trực tiếp.');
+            el.innerText = oVal;
+            el.style.backgroundColor = '';
+            return;
+        }
+        
+        try {
+            var valToSave = map.isNum ? Number(newVal.replace(/[^0-9.-]+/g, '')) : newVal;
+            if (map.table === 'raw_data') {
+                var itemNo = sid.split('-')[0];
+                var vendorCode = sid.split('-')[1];
+                
+                var updateData = {};
+                updateData[map.col] = valToSave;
+                
+                const { error } = await sb.from('raw_data').update(updateData).eq('item_no', itemNo).eq('vendor_code', vendorCode).eq('loc_code', locCode);
+                if (error) throw error;
+            } else if (map.table === 'items') {
+                var itemNo = sid.split('-')[0];
+                var updateData = {};
+                updateData[map.col] = valToSave;
+                
+                const { error } = await sb.from('items').update(updateData).eq('item_no', itemNo);
+                if (error) throw error;
+            }
+            
+            // Success
+            el.style.backgroundColor = '#f0fff4'; // Green success
+            el.setAttribute('data-oval', newVal);
+            
+            // Reload data in background
+            setTimeout(function() {
+                el.style.backgroundColor = '';
+                if (window.loadScmIntoIMD) { loadScmIntoIMD(); } // Reload from DB to sync memory
+            }, 1000);
+            
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi khi lưu: ' + e.message);
+            el.innerText = oVal;
+            el.style.backgroundColor = '#fff1f0'; // Red error
+        }
+    };
+
+    
+    function imEditSelected() {
+        var toEdit = Object.keys(window.imSelected).filter(k => window.imSelected[k]);
+        if (toEdit.length !== 1) return;
+        
+        var sid = toEdit[0];
+        var allRows = window._imRowsCache || window._currentImRows || [];
+        var row = allRows.find(r => r['Sub Item Code'] === sid);
+        if (!row) {
+            // Find in IMD directly
+            var sub = (IMD.subItems || []).find(x => x['Sub Item Code'] === sid);
+            if (sub) {
+                var it = (IMD.items || []).find(i => i['Item Code'] === sub['Item Code']) || {};
+                var of = (IMD.offers || []).find(o => o['Sub Item Code'] === sid) || {};
+                row = {
+                    'Category Code': it['Category Code'] || '', 'Item Code': sub['Item Code'], 'Item Name': it['Item Name / Functional Spec'] || '',
+                    'Sub Item Code': sub['Sub Item Code'], 'Sub Item Name': sub['Sub Item Name'] || '',
+                    'Brand': sub['Brand'] || '', 'Purchase UOM': sub['Purchase UOM'] || '',
+                    'Conversion': sub['Conversion'] || '', 'Base UOM': sub['Base UOM'] || '',
+                    'Shelf Life': sub['Shelf Life Days'] || '', 'Storage': sub['Storage'] || '',
+                    'Vendor Code': of['Vendor Code'] || '', 'Purchase Price': of['Unit Price Excl VAT'] || '',
+                    'MOQ': of['MOQ'] || '', 'MOV': of['MOV'] || '', 'Ship If': of['Ship If'] || '', 'Location Code': of['Location Code'] || sub['Location Code'] || ''
+                };
+            }
+        }
+        
+        if (!row) { alert("Không tìm thấy dữ liệu."); return; }
+        
+        
+        var form = `
+        <div id="imEditModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999">
+            <div style="background:#fff;padding:24px;border-radius:12px;width:700px;max-width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.2)">
+                <h2 style="margin:0 0 16px 0;font-size:20px;color:#2c3e50">✏️ Chỉnh sửa chi tiết sản phẩm</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-height:70vh;overflow-y:auto;padding-right:10px">
+                    <div style="grid-column:1/3; background:#f8fafc; padding:8px; border-radius:4px; margin-bottom:8px; display:flex; align-items:center"><span style="font-size:12px; font-weight:bold; color:#64748b; margin-right:8px">📍 Location:</span><span style="font-size:14px; font-weight:bold; color:#0f172a">${esc(row['Location Code'] || '')}</span></div>
+                    <div style="grid-column:1/3"><label style="display:block;font-size:11px;font-weight:bold;color:#2b6cb0;margin-bottom:4px">Item Name (Core)</label><input id="editItemName" value="${esc(row['Item Name'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#2b6cb0;margin-bottom:4px">Category (Core)</label><input id="editCategory" value="${esc(row['Category Code'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    
+                    <div style="grid-column:1/3"><label style="display:block;font-size:11px;font-weight:bold;color:#147a52;margin-bottom:4px">Sub Item Name (Physical)</label><input id="editSubName" value="${esc(row['Sub Item Name'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#147a52;margin-bottom:4px">Brand</label><input id="editBrand" value="${esc(row['Brand'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Purchase UOM</label><input id="editPurchUOM" value="${esc(row['Purchase UOM'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Conversion</label><input id="editConv" type="number" step="0.01" value="${esc(row['Conversion'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Base UOM</label><input id="editBaseUOM" value="${esc(row['Base UOM'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Shelf Life (Days)</label><input id="editShelfLife" type="number" value="${esc(row['Shelf Life'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Storage</label><input id="editStorage" value="${esc(row['Storage'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#68727f;margin-bottom:4px">Purchase Price</label><input id="editPrice" type="number" value="${esc(row['Purchase Price'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#b8851f;margin-bottom:4px">MOQ</label><input id="editMOQ" type="number" value="${esc(row['MOQ'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#b8851f;margin-bottom:4px">MOV</label><input id="editMOV" type="number" value="${esc(row['MOV'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                    <div><label style="display:block;font-size:11px;font-weight:bold;color:#b8851f;margin-bottom:4px">Ship if (Days)</label><input id="editShipIf" type="number" value="${esc(row['Ship If'])}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px"></div>
+                </div>
+                <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
+                    <button class="tbtn" style="background:#f1f2f6;color:#2c3e50;padding:8px 16px;border-radius:6px;border:none;cursor:pointer" onclick="document.getElementById('imEditModal').remove()">Hủy</button>
+                    <button class="tbtn" style="background:#2980b9;color:#fff;padding:8px 16px;border-radius:6px;border:none;font-weight:bold;cursor:pointer" onclick="imSaveModal('${sid}')">Lưu Thay Đổi</button>
+                </div>
+            </div>
+        </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', form);
+    }
+    
+    async function imSaveModal(sid) {
+        var btn = document.querySelector('#imEditModal button:last-child');
+        btn.innerText = 'Đang lưu...';
+        btn.disabled = true;
+        
+        try {
+            var itemNo = sid.split('-')[0];
+            var vendorCode = sid.split('-')[1];
+            var locCode = sid.split('-').slice(2).join('-');
+            
+            // Update items table
+            const { error: e1 } = await sb.from('items').update({
+                description: document.getElementById('editItemName').value,
+                category: document.getElementById('editCategory').value
+            }).eq('item_no', itemNo);
+            if (e1) throw e1;
+            
+            // Update raw_data table
+            const { error: e2 } = await sb.from('raw_data').update({
+                sub_desc: document.getElementById('editSubName').value,
+                brand: document.getElementById('editBrand').value,
+                purch_unit: document.getElementById('editPurchUOM').value,
+                conversion: document.getElementById('editConv').value || null,
+                base_unit: document.getElementById('editBaseUOM').value,
+                hsd: document.getElementById('editShelfLife').value || null,
+                storage: document.getElementById('editStorage').value,
+                unit_price_excl_vat: document.getElementById('editPrice').value || null,
+                moq: document.getElementById('editMOQ').value || null,
+                mov: document.getElementById('editMOV').value || null,
+                ship_if: document.getElementById('editShipIf').value || null
+            }).eq('item_no', itemNo).eq('vendor_code', vendorCode).eq('loc_code', locCode);
+            if (e2) throw e2;
+            
+            document.getElementById('imEditModal').remove();
+            
+            // Reload data
+            if (window.loadScmIntoIMD) {
+                var content = document.getElementById('content');
+                var old = content.innerHTML;
+                content.innerHTML = '<div class="imempty">Đang tải lại dữ liệu...</div>';
+                await loadScmIntoIMD();
+                imRender();
+            }
+            
+        } catch (e) {
+            console.error(e);
+            alert('Lỗi khi lưu: ' + e.message);
+            btn.innerText = 'Lưu Thay Đổi';
+            btn.disabled = false;
+        }
+    }
+
     function imList() {
       var itemBy = {}; (IMD.items || []).forEach(function (it) { itemBy[it['Item Code']] = it; });
       var priceBy = {}, offBy = {}, valBy = {};
@@ -5904,18 +6109,24 @@ function imOverview() {
         var sid = String(r['Sub Item Code']).replace(/'/g, "");
         return '<tr onclick="imRowDetail(\'' + sid + '\')" style="cursor:pointer" class="' + (window.imSelected[sid] ? 'sel' : '') + '">' + '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" onchange="window.imSelected[\''+sid+'\']=this.checked;imRender()" ' + (window.imSelected[sid] ? 'checked' : '') + '></td>' + vis.map(function (c) {
           var v = r[c];
+
+
           if (c === 'Sub Item Code' || c === 'Item Code') return '<td class="imcode">' + esc(v) + '</td>';
           if (c === 'Status') return '<td>' + imStatus(v) + '</td>';
           if (c === 'Purchase UOM' || c === 'Base UOM' || c === 'Functional UOM') return '<td>' + (v ? imPill(v) : '—') + '</td>';
-          if (c === 'Sub Item Name' || c === 'Item Name') return '<td><b>' + esc(v || '—') + '</b></td>';
+          if (c === 'Sub Item Name' || c === 'Item Name' || c === 'Item Name / Functional Spec') return '<td><b>' + esc(v || '—') + '</b></td>';
           if (c === 'Purchase Price') return '<td style="text-align:right">' + (v !== '' ? Number(v).toLocaleString('vi-VN') : '—') + '</td>';
           if (c === 'Valid To') { var vs = r['_valst']; var sty = vs === 'expired' ? 'background:#fdecec;color:#c0392b;font-weight:700' : vs === 'soon' ? 'background:#fdf4e3;color:#b8851f;font-weight:700' : ''; return '<td style="' + sty + '">' + esc(v === '' ? (r['Valid From'] ? 'nay' : '—') : v) + (vs === 'expired' ? ' ⚠' : vs === 'soon' ? ' ⏳' : '') + '</td>'; }
           return '<td>' + esc(v === '' ? '—' : v) + '</td>';
+
+
         }).join('') + '</tr>';
       }).join('');
       
         var selCount = Object.values(window.imSelected).filter(Boolean).length;
         var delBtn = selCount > 0 ? '<button class="tbtn" style="background:#fdecec;color:#c0392b;border:1px solid #c0392b;margin-right:10px" onclick="imDeleteSelected()">🗑 Xóa ' + selCount + ' mục</button>' : '';
+        var editBtn = selCount === 1 ? '<button class="tbtn" style="background:#eaf1fb;color:#2b6cb0;border:1px solid #2b6cb0;margin-right:10px" onclick="imEditSelected()">✏️ Sửa sản phẩm</button>' : '';
+        delBtn = editBtn + delBtn;
       return head + chooser
         + '<div class="imbar" style="margin-top:8px"><input id="imSearchInput" placeholder="Tìm mã, tên, brand, NCC…" value="' + esc(IMQ) + '" oninput="IMQ=this.value;window.imPage=1;clearTimeout(window.imRenderTimer);window.imRenderTimer=setTimeout(imRender,300)">' + imFilterUI('IMLFILTER', COLS, rowsAll) + delBtn + '<button class="tbtn" style="background:#c0392b;color:#fff;font-weight:bold;margin-left:auto;margin-right:15px;padding:6px 12px;border-radius:4px;border:none;cursor:pointer" onclick="imClearAllData()" title="Xóa toàn bộ 16.000 sản phẩm rác">🗑 Xóa Toàn Bộ SCM</button><span class="count">' + rows.length.toLocaleString('vi-VN') + ' sản phẩm</span></div>'
         + '<div class="impanel" style="padding:0;max-height:calc(100vh - 320px);overflow:auto"><table class="imtbl"><thead><tr>' + th + '</tr></thead><tbody>' + body + '</tbody></table></div>'
@@ -6201,7 +6412,7 @@ function imOverview() {
         }
         
         var root = '<div class="imbar" style="justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0">' +
-                 '<div><b style="color:#166534;font-size:15px">📝 Nhập tay nhiều sản phẩm (Grid)</b><br><small style="color:#14532d">Bạn có thể gõ trực tiếp hoặc Copy từ Excel và Paste (Dán) vào ô đầu tiên để tự động điền.</small></div>' +
+                 '<div><b style="color:#166534;font-size:15px">📝 Nhập tay nhiều sản phẩm (Grid)</b><br><small style="color:#14532d">Bạn có thể gõ trực tiếp hoặc Copy từ Excel và Paste (Dán) vào ô đầu tiên để tự động điền.</small> <span style="display:inline-block;margin-left:10px">' + imHelpBtn('multi_add') + '</span></div>' +
                  '<div><button class="tbtn" style="background:#fff;border:1px solid #ccc;margin-right:10px" onclick="st.itemtab=\'work\';imRender()">Hủy bỏ</button>' +
                  '<button class="btn pri" style="background:#147a52;border:none" onclick="imMultiAddCommit()">Xác nhận dữ liệu</button></div></div>';
                  
@@ -6413,12 +6624,15 @@ async function imMultiAddCommit() {
                         const newStr = hash.split('|');
                         let diffs = [];
                         const fields = ['Specs', 'Brand', 'UOM', 'Conv', 'Base', 'MOQ', 'MOV', 'ShipIf', 'HSD', 'Storage', 'Img'];
+                        let _diffsMap = {};
                         for (let i=0; i<oldStr.length; i++) {
                             if (oldStr[i] !== newStr[i]) {
                                 diffs.push(fields[i] + ' {' + oldStr[i] + '} => {' + newStr[i] + '}');
+                                _diffsMap[fields[i]] = 'Cũ: ' + (oldStr[i] || '(trống)');
                             }
                         }
                         warning = '⚠️ Khác: ' + diffs.join('; ');
+                        r._diffs = _diffsMap;
                     } else {
                         status = 'UNCHANGED';
                     }
@@ -7353,27 +7567,32 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                 if (window.IMD.offers) window.IMD.offers = window.IMD.offers.filter(o => !o['_is_scm']);
                 if (window.IMD.items) window.IMD.items = window.IMD.items.filter(i => !i['_is_scm']);
                 
-                const mappedSubs = rawData.map(r => ({
-                    'Item Code': r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Sub Item Name': r.sub_desc || r.items.description,
-                    'Brand': r.brand || '',
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'Shelf Life Days': r.hsd,
-                    'Storage': r.storage,
-                    'Status': 'Active',
-                    '_is_scm': true,
-                    'Vendor Name': r.vendor?.name || r.vendor_code,
-                    'Image Status': (r.items && r.items.image_url) ? 'Available' : 'Missing'
-                }));
+                                const mappedSubs = [];
+                rawData.forEach(r => {
+                    const subCode = r.item_no + '-' + r.vendor_code + '-' + (r.loc_code || '');
+                    mappedSubs.push({
+                        'Location Code': r.loc_code || '', 
+                            'Item Code': r.item_no,
+                            'Sub Item Code': subCode,
+                            'Sub Item Name': r.sub_desc || (r.items ? r.items.description : ''),
+                            'Brand': r.brand || '',
+                            'Purchase UOM': r.purch_unit,
+                            'Conversion': r.conversion,
+                            'Base UOM': r.base_unit,
+                            'Shelf Life Days': r.hsd,
+                            'Storage': r.storage,
+                            'Status': 'Active',
+                            '_is_scm': true,
+                            'Vendor Name': (r.vendor ? r.vendor.name : '') || r.vendor_code,
+                            'Image Status': (r.items && r.items.image_url) ? 'Available' : 'Missing'
+                    });
+                });
                 
                 window.IMD.subItems = window.IMD.subItems.concat(mappedSubs);
                 
                 const mappedOffers = rawData.map(r => ({
-                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
+                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no + '-' + r.loc_code,
+                    'Sub Item Code': r.item_no + '-' + r.vendor_code + '-' + (r.loc_code || ''),
                     'Vendor Code': r.vendor_code,
                     'Vendor Name': r.vendor?.name || r.vendor_code,
                     'Location Code': r.loc_code,
@@ -7633,27 +7852,32 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
                 if (window.IMD.offers) window.IMD.offers = window.IMD.offers.filter(o => !o['_is_scm']);
                 if (window.IMD.items) window.IMD.items = window.IMD.items.filter(i => !i['_is_scm']);
                 
-                const mappedSubs = rawData.map(r => ({
-                    'Item Code': r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
-                    'Sub Item Name': r.sub_desc || r.items.description,
-                    'Brand': r.brand || '',
-                    'Purchase UOM': r.purch_unit,
-                    'Conversion': r.conversion,
-                    'Base UOM': r.base_unit,
-                    'Shelf Life Days': r.hsd,
-                    'Storage': r.storage,
-                    'Status': 'Active',
-                    '_is_scm': true,
-                    'Vendor Name': r.vendor?.name || r.vendor_code,
-                    'Image Status': (r.items && r.items.image_url) ? 'Available' : 'Missing'
-                }));
+                                const mappedSubs = [];
+                rawData.forEach(r => {
+                    const subCode = r.item_no + '-' + r.vendor_code + '-' + (r.loc_code || '');
+                    mappedSubs.push({
+                        'Location Code': r.loc_code || '', 
+                            'Item Code': r.item_no,
+                            'Sub Item Code': subCode,
+                            'Sub Item Name': r.sub_desc || (r.items ? r.items.description : ''),
+                            'Brand': r.brand || '',
+                            'Purchase UOM': r.purch_unit,
+                            'Conversion': r.conversion,
+                            'Base UOM': r.base_unit,
+                            'Shelf Life Days': r.hsd,
+                            'Storage': r.storage,
+                            'Status': 'Active',
+                            '_is_scm': true,
+                            'Vendor Name': (r.vendor ? r.vendor.name : '') || r.vendor_code,
+                            'Image Status': (r.items && r.items.image_url) ? 'Available' : 'Missing'
+                    });
+                });
                 
                 window.IMD.subItems = window.IMD.subItems.concat(mappedSubs);
                 
                 const mappedOffers = rawData.map(r => ({
-                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no,
-                    'Sub Item Code': r.item_no + '-' + r.vendor_code,
+                    'Offer ID': 'OFFER-SCM-' + r.vendor_code + '-' + r.item_no + '-' + r.loc_code,
+                    'Sub Item Code': r.item_no + '-' + r.vendor_code + '-' + (r.loc_code || ''),
                     'Vendor Code': r.vendor_code,
                     'Vendor Name': r.vendor?.name || r.vendor_code,
                     'Location Code': r.loc_code,

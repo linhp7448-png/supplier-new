@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng ký Nhà cung cấp — Galaxy Cinema</title>
+<style>body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f4f6f8;margin:0;display:flex;justify-content:center;padding:40px 16px}
+.box{background:#fff;border:1px solid #e6e9ee;border-radius:14px;padding:28px;max-width:560px;width:100%;box-shadow:0 12px 40px rgba(20,30,45,.08)}
+h1{font-size:20px;margin:0 0 4px}p{color:#68727f;font-size:13px;margin:0 0 18px}
+label{display:block;font-size:11px;color:#68727f;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:13.5px;padding:9px 11px;border:1px solid #e6e9ee;border-radius:8px;box-sizing:border-box}
+button{margin-top:18px;width:100%;font:inherit;font-weight:700;background:#df7a1c;color:#fff;border:none;border-radius:9px;padding:12px;cursor:pointer}
+button:hover{background:#c5680f}.msg{margin-top:14px;font-size:13px;font-weight:600}.ok{color:#2e8b57}.bad{color:#bf4631}</style></head><body>
+<div class="box"><h1>Đăng ký Nhà cung cấp</h1><p>Galaxy Cinema — Quý công ty muốn trở thành nhà cung cấp? Điền thông tin bên dưới, phòng Mua hàng sẽ liên hệ khi có nhu cầu phù hợp.</p>
+<label>Tên công ty *</label><input id="n">
+<label>Mã số thuế (10 số)</label><input id="m">
+<label>Nhóm hàng / dịch vụ cung cấp</label><select id="c"><option>Concession Food</option><option>Concession Packaging</option><option>Concession Merchandise</option><option>Concession Equipment</option><option>Cinemunch Food</option><option>Cinemunch Packaging</option><option>Advertising & POSM</option><option>Media</option><option>Logistics</option><option>Operation Services</option><option>Operation Consumables</option><option>IT</option><option>Technical</option><option>Other</option></select>
+<label>Sản phẩm / dịch vụ chính</label><input id="p2">
+<label>Email liên hệ *</label><input id="e" type="email">
+<label>Số điện thoại</label><input id="ph">
+<button onclick="go()">Gửi đăng ký</button><div class="msg" id="msg"></div></div>
+<script src="env.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const ENV=window.__ENV__||{};const sb=window.supabase.createClient(ENV.SUPABASE_URL,ENV.SUPABASE_ANON_KEY);
+async function go(){const g=i=>document.getElementById(i).value.trim();const el=document.getElementById('msg');
+ if(!g('n')||!g('e')){el.className='msg bad';el.textContent='Vui lòng điền tên công ty và email.';return;}
+ el.className='msg';el.textContent='Đang gửi…';
+ const {data,error}=await sb.rpc('public_register',{p_name:g('n'),p_mst:g('m'),p_cat:g('c'),p_email:g('e'),p_phone:g('ph'),p_products:g('p2')});
+ if(error){el.className='msg bad';el.textContent='Lỗi: '+error.message;return;}
+ el.className='msg '+(String(data).indexOf('thành công')>=0?'ok':'bad');el.textContent=data;}
+</script></body></html>

@@ -6779,15 +6779,17 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         arr.sort(function (a, b) { return String(a.item_no).localeCompare(String(b.item_no), 'vi', { numeric: true }); });
         
         var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Danh_Muc_Mat_Hang</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table border="1">';
-        html += '<tr><th style="background:#f3f4f6">Mã Hàng</th><th style="background:#f3f4f6">Tên Hàng</th><th style="background:#f3f4f6">ĐVT</th><th style="background:#f3f4f6">Nhóm</th><th style="background:#f3f4f6">URL Ảnh</th></tr>';
+        html += '<tr><th style="background:#f3f4f6">Mã Hàng</th><th style="background:#f3f4f6">Tên Hàng</th><th style="background:#f3f4f6">ĐVT</th><th style="background:#f3f4f6">Nhóm</th><th style="background:#f3f4f6">Ảnh Minh Họa</th><th style="background:#f3f4f6">URL Ảnh</th></tr>';
         
         arr.forEach(function(it) {
-            html += '<tr>' +
-                '<td style="mso-number-format:\'\\@\'">' + (it.item_no || '') + '</td>' +
-                '<td>' + (it.name || '') + '</td>' +
-                '<td>' + (it.uom || '') + '</td>' +
-                '<td>' + (it.category || '') + '</td>' +
-                '<td>' + (it.image_url || '') + '</td>' +
+            var imgTag = it.image_url ? '<img src="' + it.image_url + '" width="60" height="60" style="display:block;margin:auto">' : '';
+            html += '<tr style="height:65px">' +
+                '<td style="mso-number-format:\'\\@\'; vertical-align:middle;">' + (it.item_no || '') + '</td>' +
+                '<td style="vertical-align:middle;">' + (it.name || '') + '</td>' +
+                '<td style="vertical-align:middle; text-align:center;">' + (it.uom || '') + '</td>' +
+                '<td style="vertical-align:middle;">' + (it.category || '') + '</td>' +
+                '<td style="vertical-align:middle; text-align:center;">' + imgTag + '</td>' +
+                '<td style="vertical-align:middle; white-space:nowrap;">' + (it.image_url || '') + '</td>' +
                 '</tr>';
         });
         

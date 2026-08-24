@@ -4214,7 +4214,63 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
         });
         if (_synced.length) v.contacts = _synced;
       }
-      // --- END SYNC ---
+      async function processBulkDeleteImages(btn) {
+        var text = document.getElementById('bulkDeleteArea').value.trim();
+        if (!text) return alert("Vui lòng dán danh sách mã hàng!");
+        
+        var lines = text.split('\n');
+        var codesToClear = [];
+        for (var i = 0; i < lines.length; i++) {
+            var code = lines[i].trim();
+            if (code) codesToClear.push(code);
+        }
+        
+        if (codesToClear.length === 0) return;
+        if (!confirm("Bạn có chắc chắn muốn xóa ảnh của " + codesToClear.length + " mặt hàng này khỏi Database và Server?")) return;
+        
+        btn.innerHTML = 'Đang xử lý...'; btn.disabled = true;
+        
+        try {
+            // First, find if any of these have image_path so we can delete from storage
+            var { data, error } = await sb.from('item_master').select('item_no, image_path').in('item_no', codesToClear);
+            if (error) throw error;
+            
+            var pathsToDelete = (data || []).filter(d => d.image_path).map(d => d.image_path);
+            
+            // Delete from storage
+            if (pathsToDelete.length > 0) {
+                const { error: errStorage } = await sb.storage.from('vendor-docs').remove(pathsToDelete);
+                if (errStorage) console.error("Lỗi xóa file storage:", errStorage);
+            }
+            
+            // Delete from DB
+            const { error: errDB } = await sb.from('item_master').update({ image_url: null, image_path: null }).in('item_no', codesToClear);
+            if (errDB) throw errDB;
+            
+            // Clean up UI ITEMS cache if they exist
+            if (typeof ITEMS !== 'undefined') {
+                codesToClear.forEach(code => {
+                    if (ITEMS[code]) {
+                        ITEMS[code].image_url = null;
+                        ITEMS[code].image_path = null;
+                    }
+                });
+            }
+            
+            alert('Đã xóa thành công ảnh của ' + codesToClear.length + ' mặt hàng!');
+            btn.closest('.overlay-bulk').remove();
+            
+            // Re-render based on current view
+            if (st.view === 'itemmgmt') imRender();
+            else if (st.view === 'items' && typeof renderItems === 'function') renderItems();
+            
+        } catch (e) {
+            alert("Lỗi khi xóa ảnh: " + e.message);
+            btn.innerHTML = 'Thử lại'; btn.disabled = false;
+        }
+    }
+    
+    // --- APP STARTUP ---
       const isNew = !v.id;
       try {
         if (!v.name || !v.name.trim()) return failSave('Thiếu tên NCC', '.cardbody .fld input');
@@ -7956,19 +8012,25 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       box.style.cssText = 'position:relative;background:#fff;padding:24px;border-radius:12px;width:650px;max-width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2)';
       box.innerHTML = `
         <h3 style="margin-top:0">🖼 Cập nhật ảnh hàng loạt</h3>
-        <p style="font-size:13px;color:#666;margin-bottom:16px">Chọn 1 trong 2 phương pháp dưới đây để cập nhật ảnh cho nhiều mặt hàng cùng lúc.</p>
+        <p style="font-size:13px;color:#666;margin-bottom:16px">Chọn 1 trong 3 phương pháp dưới đây để quản lý ảnh cho nhiều mặt hàng cùng lúc.</p>
         
         <div style="display:flex;gap:16px;margin-bottom:16px">
            <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#2b6cb0';this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('bulkImgInput').click(); this.closest('.overlay-bulk').remove()">
               <div style="font-size:36px;margin-bottom:12px">📁</div>
-              <div style="font-weight:600;color:#2b6cb0;margin-bottom:6px;font-size:15px">Tải tệp ảnh trực tiếp</div>
-              <div style="font-size:12px;color:#666;line-height:1.4">Quét chọn nhiều tệp ảnh trong máy tính.<br><b>Lưu ý:</b> Tên tệp phải trùng khớp với Mã Hàng (VD: <span style="font-family:monospace;color:#333">HO7UPBIB.png</span>)</div>
+              <div style="font-weight:600;color:#2b6cb0;margin-bottom:6px;font-size:15px">Tải tệp ảnh</div>
+              <div style="font-size:12px;color:#666;line-height:1.4">Quét chọn nhiều tệp ảnh (.png, .jpg) có tên trùng Mã Hàng.</div>
            </div>
            
-           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#1890ff';this.style.background='#f0f9ff'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('pasteUrlArea').style.display='block';this.style.borderColor='#1890ff';this.style.background='#f0f9ff'">
+           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#1890ff';this.style.background='#f0f9ff'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('pasteUrlArea').style.display='block';document.getElementById('deleteImgArea').style.display='none';this.style.borderColor='#1890ff';this.style.background='#f0f9ff'">
               <div style="font-size:36px;margin-bottom:12px">📋</div>
-              <div style="font-weight:600;color:#1890ff;margin-bottom:6px;font-size:15px">Dán danh sách URL</div>
-              <div style="font-size:12px;color:#666;line-height:1.4">Bạn đã có sẵn file Excel chứa 2 cột Mã Hàng và URL Ảnh? Bấm vào đây để dán toàn bộ vào hệ thống.</div>
+              <div style="font-weight:600;color:#1890ff;margin-bottom:6px;font-size:15px">Dán URL</div>
+              <div style="font-size:12px;color:#666;line-height:1.4">Copy 2 cột (Mã Hàng & URL) từ Excel dán vào hệ thống.</div>
+           </div>
+           
+           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#e53e3e';this.style.background='#fff5f5'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('deleteImgArea').style.display='block';document.getElementById('pasteUrlArea').style.display='none';this.style.borderColor='#e53e3e';this.style.background='#fff5f5'">
+              <div style="font-size:36px;margin-bottom:12px">🧹</div>
+              <div style="font-weight:600;color:#e53e3e;margin-bottom:6px;font-size:15px">Xóa ảnh loạt</div>
+              <div style="font-size:12px;color:#666;line-height:1.4">Dán danh sách Mã Hàng cần xóa trắng ảnh khỏi hệ thống.</div>
            </div>
         </div>
         
@@ -7977,6 +8039,14 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
             <textarea id="bulkUrlArea" placeholder="MÃ_HÀNG&#9;https://link-anh-1.com/img.jpg&#10;MÃ_HÀNG_2&#9;https://link-anh-2.com/img.jpg" style="width:100%;height:150px;padding:10px;border:1px solid #ccc;border-radius:6px;font-family:monospace;white-space:pre;font-size:12px"></textarea>
             <div style="margin-top:12px;text-align:right">
               <button class="tbtn pri" onclick="processBulkUrls(this)">Bắt đầu cập nhật URL</button>
+            </div>
+        </div>
+
+        <div id="deleteImgArea" style="display:none;background:#fff5f5;border:1px solid #feb2b2;border-radius:8px;padding:16px;animation:fadeIn 0.3s;margin-top:16px">
+            <div style="font-size:13px;color:#c53030;margin-bottom:8px;font-weight:600">Dán danh sách Mã Hàng cần xóa ảnh (mỗi mã 1 dòng):</div>
+            <textarea id="bulkDeleteArea" placeholder="HO7UPBIB&#10;HOBANHFLAN" style="width:100%;height:150px;padding:10px;border:1px solid #feb2b2;border-radius:6px;font-family:monospace;white-space:pre;font-size:12px"></textarea>
+            <div style="margin-top:12px;text-align:right">
+              <button class="tbtn" style="background:#e53e3e;color:#fff;border:none" onclick="processBulkDeleteImages(this)">Xác nhận Xóa Ảnh</button>
             </div>
         </div>
         

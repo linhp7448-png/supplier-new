@@ -3454,7 +3454,7 @@
       if (st.view === 'users') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý người dùng</div>`; return; }
 
       if (st.view === 'inactiveReq') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Đề nghị ngừng hoạt động NCC</div>`; return; }
-      if (st.view === 'items') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý mặt hàng & ảnh sản phẩm<div style="font-size:12px;color:var(--muted);font-weight:normal;margin-top:2px">(Dữ liệu Read-only hiển thị từ Item Management)</div></div><input class="f" id="fitem" placeholder="Tìm mã/tên hàng..." style="margin-left:12px;min-width:220px">`; setTimeout(function () { var fi = $('#fitem'); if (fi) fi.oninput = function () { itemsRender(this.value); }; }, 0); return; }
+      if (st.view === 'items') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Quản lý mặt hàng & ảnh sản phẩm<div style="font-size:12px;color:var(--muted);font-weight:normal;margin-top:2px">(Dữ liệu Read-only hiển thị từ Item Management)</div></div><input class="f" id="fitem" placeholder="Tìm mã/tên hàng..." style="margin-left:12px;min-width:220px"><button class="tbtn pri" style="margin-left:12px; font-weight:600" onclick="exportItemsToExcel()">⬇️ Xuất Excel</button>`; setTimeout(function () { var fi = $('#fitem'); if (fi) fi.oninput = function () { itemsRender(this.value); }; }, 0); return; }
       if (st.view === 'promos') { $('#toolbar').innerHTML = `<div style="font-weight:650;font-size:14px">Khuyến mãi / banner cổng NCC</div>`; return; }
       if (st.view === 'po') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Đơn mua (PO)</div><select class="f" id="fpo" style="margin-left:12px"><option value="">Mọi trạng thái</option>' + ['Draft', 'Pending_Approval', 'Sent_to_Supplier', 'Supplier_Confirmed', 'Delivered', 'Supplier_Rejected', 'Rejected'].map(s => '<option ' + (st.postatus === s ? 'selected' : '') + ' value="' + s + '">' + s + '</option>').join('') + '</select>' + (function () { var b = ''; var s = st.postatus; if (!s || s === 'Draft') b += '<button class="tbtn" onclick="poBulk(\'submit\')">Gửi duyệt (chọn)</button>'; if ((!s || s === 'Pending_Approval') && can('approve')) b += '<button class="tbtn pri" onclick="poBulk(\'approve\')">Duyệt (chọn)</button><button class="tbtn" style="color:var(--bad)" onclick="poBulk(\'reject\')">Từ chối (chọn)</button>'; return b ? '<span class="tsep"></span>' + b : ''; })() + '<span class="count">' + POS.length + ' PO</span>'; const fp = $('#fpo'); if (fp) fp.onchange = e => { st.postatus = e.target.value; saveSt(); renderPO(); }; return; }
       const B = (l, fn, dis, pri) => `<button class="tbtn ${pri ? 'pri' : ''}" ${dis ? 'disabled' : ''} onclick="${fn}">${l}</button>`;
@@ -6771,6 +6771,38 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       await loadItems(); await signItemImages();
       itemsRender('');
     }
+    
+    function exportItemsToExcel() {
+        if (!ITEMS || Object.keys(ITEMS).length === 0) return alert("Không có dữ liệu để xuất!");
+        
+        var arr = Object.values(ITEMS);
+        arr.sort(function (a, b) { return String(a.item_no).localeCompare(String(b.item_no), 'vi', { numeric: true }); });
+        
+        var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Danh_Muc_Mat_Hang</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table border="1">';
+        html += '<tr><th style="background:#f3f4f6">Mã Hàng</th><th style="background:#f3f4f6">Tên Hàng</th><th style="background:#f3f4f6">ĐVT</th><th style="background:#f3f4f6">Nhóm</th><th style="background:#f3f4f6">URL Ảnh</th></tr>';
+        
+        arr.forEach(function(it) {
+            html += '<tr>' +
+                '<td style="mso-number-format:\'\\@\'">' + (it.item_no || '') + '</td>' +
+                '<td>' + (it.name || '') + '</td>' +
+                '<td>' + (it.uom || '') + '</td>' +
+                '<td>' + (it.category || '') + '</td>' +
+                '<td>' + (it.image_url || '') + '</td>' +
+                '</tr>';
+        });
+        
+        html += '</table></body></html>';
+        
+        var blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'Danh_Muc_Mat_Hang.xls';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     function itemsRender(q) {
       q = (q || '').toLowerCase();
       var arr = Object.values(ITEMS).filter(function (it) { return !q || (it.item_no || '').toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q); });

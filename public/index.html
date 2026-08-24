@@ -5209,6 +5209,11 @@ function imOverview() {
       var x = (IMD.subItems || []).filter(function (s) { return s['Sub Item Code'] === code; })[0];
       if (!x) return;
       var it = itemBy[x['Item Code']] || {}, of = offBy[code] || {};
+      
+      // Lấy ảnh trực tiếp từ Golden Record (ITEMS) để luôn đồng bộ
+      var goldenItem = Object.values(ITEMS || {}).find(function(g) { return g.item_no === x['Item Code']; });
+      var realImageUrl = goldenItem ? goldenItem.image_url : (it['image_url'] || null);
+
       function row(label, val, color) { return '<div class="imdrow"><span class="imdk" style="color:' + (color || '#68727f') + '">' + esc(label) + '</span><span class="imdv">' + esc(val == null || val === '' ? '—' : val) + '</span></div>'; }
       var owner = '<div class="imdsec" style="border-color:#2b6cb0"><div class="imdst" style="color:#2b6cb0">🏢 Product Owner</div>'
         + row('Category', it['Category Code'], '#2b6cb0') + row('Item Code', x['Item Code'], '#2b6cb0') + row('Item Name', it['Item Name / Functional Spec'], '#2b6cb0')
@@ -5222,11 +5227,11 @@ function imOverview() {
             var imgHtml = '<div class="imdsec" style="border-color:#ccc; text-align:center; position:relative">' 
         + '<div class="imdst" style="color:#666">📷 Hình ảnh</div>'
         + '<div style="margin-top:10px">'
-        + (it['image_url'] ? '<img src="'+esc(it['image_url'])+'" style="max-width:100%; max-height:200px; border-radius:4px" />' 
+        + (realImageUrl ? '<img src="'+esc(realImageUrl)+'" style="max-width:100%; max-height:200px; border-radius:4px" />' 
                            : '<div style="background:#eee; height:150px; display:flex; align-items:center; justify-content:center; color:#999; border-radius:4px">Chưa có ảnh</div>')
         + '</div>'
         + '<button id="btnUploadImg" onclick="document.getElementById(\'imgUpload\').click()" style="margin-top:10px; width:100%" class="btn">Tải ảnh lên</button>'
-        + '<input type="file" id="imgUpload" style="display:none" accept="image/*" onchange="uploadItemImage(\''+it['Item Code']+'\', this.files[0])" />'
+        + '<input type="file" id="imgUpload" style="display:none" accept="image/*" onchange="uploadItemImage(\''+x['Item Code']+'\', this.files[0])" />'
         + '</div>';
 
       var html = '<div class="imhmask" onclick="imRowClose(event)"><div class="imhcard" style="max-width:920px" onclick="event.stopPropagation()">'
@@ -8045,7 +8050,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       const box = document.createElement('div');
       box.style.cssText = 'position:relative;background:#fff;padding:24px;border-radius:12px;width:650px;max-width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2)';
       box.innerHTML = `
-        <h3 style="margin-top:0">🖼 Cập nhật ảnh hàng loạt</h3>
+        <h3 style="margin-top:0;display:flex;align-items:center;gap:8px">🖼 Cập nhật ảnh hàng loạt <span title="Hướng dẫn Import Ảnh:&#10;1. Lấy link ảnh thật (kết thúc bằng .jpg, .png...). Tuyệt đối không copy link trang tìm kiếm Google.&#10;2. Nhập theo cú pháp: [Mã Hàng] [Dấu cách hoặc Phím Tab] [Link Ảnh]&#10;3. Mẹo: Khai báo 2 cột trong Excel rồi copy-paste vào hệ thống để cập nhật hàng ngàn ảnh cùng lúc." style="cursor:help;font-size:14px;color:#1890ff;background:#e6f7ff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #91d5ff;font-weight:normal">?</span></h3>
         <p style="font-size:13px;color:#666;margin-bottom:16px">Chọn 1 trong 3 phương pháp dưới đây để quản lý ảnh cho nhiều mặt hàng cùng lúc.</p>
         
         <div style="display:flex;gap:16px;margin-bottom:16px">
@@ -8096,10 +8101,20 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       if (!text) return;
       btn.innerHTML = 'Đang xử lý...';
       btn.disabled = true;
-      const lines = text.split('\\n');
+      const lines = text.split('\n');
       let success = 0, errs = 0;
       for (let i = 0; i < lines.length; i++) {
-        const parts = lines[i].split('\\t'); // Excel copy uses tabs
+        let lineStr = lines[i].trim();
+        if (!lineStr) continue;
+        
+        let parts = lineStr.split('\t'); // Excel copy uses tabs
+        if (parts.length < 2) {
+            const firstSpace = lineStr.indexOf(' ');
+            if (firstSpace > 0) {
+                parts = [lineStr.substring(0, firstSpace), lineStr.substring(firstSpace).trim()];
+            }
+        }
+        
         if (parts.length < 2) continue;
         const code = parts[0].trim().toUpperCase();
         const url = parts[1].trim();

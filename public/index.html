@@ -6976,30 +6976,30 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         + '<button class="btn pri" id="uaddbtn" onclick="uAdd()">+ Tạo tài khoản</button></div>'
         + '<div style="color:var(--muted);font-size:11px;margin-top:8px">Người được tạo đăng nhập ngay bằng email + mật khẩu này, vai trò gán luôn khi tạo. Đổi vai trò về sau: chọn trực tiếp trong cột Vai trò ở bảng trên.</div></div></div>';
       try {
-        const { data, error } = await sb.functions.invoke('super-service', { body: { action: 'list' } });
-        if (error || !data || data.error) { $('#ulist').innerHTML = '<div style="color:var(--bad);font-weight:600">' + esc((data && data.error) || 'Không tải được danh sách. Kiểm tra Edge Function super-service và bạn là admin.') + '</div>'; return; }
+        const { data, error } = await sb.functions.invoke('admin-users', { body: { action: 'list' } });
+        if (error || !data || data.error) { $('#ulist').innerHTML = '<div style="color:var(--bad);font-weight:600">' + esc((data && data.error) || 'Không tải được danh sách. Kiểm tra Edge Function admin-users và bạn là admin.') + '</div>'; return; }
         const rr = await sb.from('app_role').select('*'); ROLES = {}; (rr.data || []).forEach(function (x) { ROLES[(x.email || '').toLowerCase()] = x.role; });
         const supEmails = new Set(Object.values(SUPMAP).map(function (x) { return (x || '').toLowerCase(); }));
         const us = data.users || [];
-        const roleSel = function (em) {
+        const roleSel = function (em, uid) {
           var cur = ROLES[em] || ''; var opts = ['', 'Buyer', 'Approver', 'Accounting', 'Viewer', 'Admin'];
-          return '<select class="f" style="min-width:130px" onchange="uRole(\'' + em + '\',this.value,this)">' + opts.map(function (o) { return '<option value="' + o + '" ' + (cur === o ? 'selected' : '') + '>' + (o || '— chưa gán') + '</option>'; }).join('') + '</select>';
+          return '<select class="f" style="min-width:130px" onchange="uRole(\'' + em + '\',this.value,this,\'' + uid + '\')">' + opts.map(function (o) { return '<option value="' + o + '" ' + (cur === o ? 'selected' : '') + '>' + (o || '— chưa gán') + '</option>'; }).join('') + '</select>';
         };
         $('#ulist').innerHTML = '<table class="mini"><thead><tr><th>Email</th><th>Vai trò</th><th>Tạo lúc</th><th>Đăng nhập gần nhất</th><th></th></tr></thead><tbody>'
           + us.map(function (x) {
             var em = (x.email || '').toLowerCase(); var isSup = supEmails.has(em);
-            return '<tr><td>' + esc(x.email) + (em === (me.email || '').toLowerCase() ? ' <span style="color:var(--faint);font-size:10px">(bạn)</span>' : '') + '</td><td>' + (isSup ? '<span class="badge b-neutral" title="Tài khoản cổng NCC — không áp vai trò nội bộ">Cổng NCC</span>' : roleSel(em)) + '</td><td>' + (x.created_at ? new Date(x.created_at).toLocaleDateString('vi-VN') : '') + '</td><td>' + (x.last_sign_in_at ? new Date(x.last_sign_in_at).toLocaleString('vi-VN') : '—') + '</td><td style="white-space:nowrap"><button class="btn" style="padding:4px 8px" onclick="uReset(\'' + x.id + '\')">Đổi MK</button> <button class="xbtn" onclick="uDel(\'' + x.id + '\',\'' + esc(x.email) + '\')">✕</button></td></tr>';
+            return '<tr><td>' + esc(x.email) + (em === (me.email || '').toLowerCase() ? ' <span style="color:var(--faint);font-size:10px">(bạn)</span>' : '') + '</td><td>' + (isSup ? '<span class="badge b-neutral" title="Tài khoản cổng NCC — không áp vai trò nội bộ">Cổng NCC</span>' : roleSel(em, x.id)) + '</td><td>' + (x.created_at ? new Date(x.created_at).toLocaleDateString('vi-VN') : '') + '</td><td>' + (x.last_sign_in_at ? new Date(x.last_sign_in_at).toLocaleString('vi-VN') : '—') + '</td><td style="white-space:nowrap"><button class="btn" style="padding:4px 8px" onclick="uReset(\'' + x.id + '\')">Đổi MK</button> <button class="xbtn" onclick="uDel(\'' + x.id + '\',\'' + esc(x.email) + '\')">✕</button></td></tr>';
           }).join('')
           + '</tbody></table><div style="color:var(--muted);font-size:12px;margin-top:6px">' + us.length + ' tài khoản</div>';
       } catch (e) { $('#ulist').innerHTML = '<div style="color:var(--bad)">Lỗi: ' + esc(e.message) + '</div>'; }
     }
-    async function uRole(em, role, el) {
+    async function uRole(em, role, el, uid) {
       if (MYROLE !== 'Admin') return toast('Chỉ Admin được phân quyền', 1);
       if (el) el.disabled = true;
       try {
         var r;
         if (!role) r = await sb.from('app_role').delete().eq('email', em);
-        else r = await sb.from('app_role').upsert({ email: em, role: role }, { onConflict: 'email' });
+        else r = await sb.from('app_role').upsert({ id: uid, email: em, role: role }, { onConflict: 'email' });
         if (r.error) throw r.error;
         if (!role) delete ROLES[em]; else ROLES[em] = role;
         toast(role ? ('Đã gán ' + role + ' cho ' + em) : ('Đã bỏ vai trò của ' + em));
@@ -7100,16 +7100,16 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       if (!e || !p) return toast('Nhập email + mật khẩu', 1);
       const btn = $('#uaddbtn'); if (btn) { btn.disabled = true; btn.textContent = 'Đang tạo…'; }
       try {
-        const { data, error } = await sb.functions.invoke('super-service', { body: { action: 'create', email: e, password: p } });
+        const { data, error } = await sb.functions.invoke('admin-users', { body: { action: 'create', email: e, password: p } });
         if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
         if (ro) { const r2 = await sb.from('app_role').upsert({ email: e.toLowerCase(), role: ro }, { onConflict: 'email' }); if (r2.error) toast('Tạo TK xong nhưng gán vai trò lỗi: ' + r2.error.message, 1); }
         toast('Đã tạo ' + e + ' (' + ro + ')'); usersView();
       } catch (err) { toast('Lỗi: ' + (err.message || err), 1); }
       finally { if (btn) { btn.disabled = false; btn.textContent = '+ Tạo tài khoản'; } }
     }
-    async function uDel(id, em) { if (!confirm('Xóa tài khoản ' + em + '?')) return; const { data, error } = await sb.functions.invoke('super-service', { body: { action: 'delete', id: id } }); if (error || (data && data.error)) return toast('Lỗi: ' + ((data && data.error) || error.message), 1); try { await sb.from('app_role').delete().eq('email', (em || '').toLowerCase()); } catch (e) { } toast('Đã xóa'); usersView(); }
+    async function uDel(id, em) { if (!confirm('Xóa tài khoản ' + em + '?')) return; const { data, error } = await sb.functions.invoke('admin-users', { body: { action: 'delete', id: id } }); if (error || (data && data.error)) return toast('Lỗi: ' + ((data && data.error) || error.message), 1); try { await sb.from('app_role').delete().eq('email', (em || '').toLowerCase()); } catch (e) { } toast('Đã xóa'); usersView(); }
 
-    async function uReset(id) { const p = prompt('Mật khẩu mới (≥6 ký tự):'); if (!p) return; const { data, error } = await sb.functions.invoke('super-service', { body: { action: 'password', id: id, password: p } }); if (error || (data && data.error)) return toast('Lỗi: ' + ((data && data.error) || error.message), 1); toast('Đã đổi mật khẩu'); }
+    async function uReset(id) { const p = prompt('Mật khẩu mới (≥6 ký tự):'); if (!p) return; const { data, error } = await sb.functions.invoke('admin-users', { body: { action: 'password', id: id, password: p } }); if (error || (data && data.error)) return toast('Lỗi: ' + ((data && data.error) || error.message), 1); toast('Đã đổi mật khẩu'); }
 
     /* ---------- PO nội bộ ---------- */
     function poBadge(s) { var m = { Draft: 'b-neutral', Pending_Approval: 'b-warn', Sent_to_Supplier: 'b-warn', Supplier_Confirmed: 'b-ok', Supplier_Rejected: 'b-bad', Rejected: 'b-bad', Delivered: 'b-ok' }; var l = { Draft: 'Nháp', Pending_Approval: 'Chờ duyệt', Sent_to_Supplier: 'Đã gửi NCC', Supplier_Confirmed: 'NCC đã xác nhận', Supplier_Rejected: 'NCC từ chối', Rejected: 'Bị từ chối', Delivered: 'Đã giao hàng' }; return '<span class="badge ' + (m[s] || 'b-neutral') + '">' + (l[s] || s) + '</span>'; }

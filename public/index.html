@@ -3119,7 +3119,10 @@
     function ptSet(val) { var o = $('#ptother'); if (val === 'Khác') { if (o) { o.style.display = 'block'; o.focus(); } fset('pt', (o && o.value.trim()) || 'Khác'); } else { if (o) o.style.display = 'none'; fset('pt', val); } }
     function catOtherToggle(val) { var i = $('#catother'); if (i) i.style.display = val === 'Other' ? 'block' : 'none'; }
     function ctToggle(val) { var i = $('#ctother'); if (i) i.style.display = val === 'Hợp đồng khác' ? 'block' : 'none'; }
-    function dtToggle(val) { var i = $('#dtypeOther'); if (i) i.style.display = val === 'Khác' ? 'inline-block' : 'none'; }
+    function dtToggle(val) { 
+      var i = $('#dtypeOther'); if (i) i.style.display = val === 'Khác' ? 'inline-block' : 'none'; 
+      var ext = $('#dext'); if (ext) ext.style.display = ['Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP'].includes(val) ? 'inline-block' : 'none';
+    }
     function cRoleOther(i, sel) { var inp = $('#crole_' + i); if (!inp) return; if (sel.value === 'Khác') { inp.style.display = 'block'; cset(i, 't', (inp.value || '').trim() || 'Khác'); inp.focus(); } else { inp.style.display = 'none'; } }
     const cats = ['Concession Food', 'Concession Packaging', 'Concession Merchandise', 'Concession Equipment', 'Cinemunch Food', 'Cinemunch Packaging', 'Advertising & POSM', 'Media', 'Logistics', 'Operation Services', 'Operation Consumables', 'IT', 'Technical', 'Out of Scope', 'Other'];
     const ratings = ['', 'Preferred (≥90%)', 'Approved (75–90%)', 'Conditional (60–75%)', 'Not Approved (<60%)'];
@@ -3137,8 +3140,10 @@
       sm: {
         t: 'Supplier Management', items: [
           { l: 'Dashboard', v: 'dash', ic: 'dash', desc: 'Tổng quan số liệu và tình hình quản lý nhà cung cấp' },
-          { l: 'Nhà cung cấp', v: 'vendors', ic: 'vendors', desc: 'Quản lý danh sách, hồ sơ và duyệt nhà cung cấp mới' },
-          { l: 'Rủi ro thuế', v: 'risk', ic: 'risk', desc: 'Theo dõi và cảnh báo các rủi ro liên quan đến thuế của NCC' },
+          { l: 'Nhà cung cấp', isGroup: true, ic: 'vendors', items: [
+             { l: 'Rủi ro về thuế', v: 'vendors', desc: 'Quản lý danh sách, hồ sơ và theo dõi rủi ro' },
+             { l: 'Chứng từ', v: 'docs', desc: 'Quản lý chứng từ rủi ro về thuế' }
+          ] },
           { l: 'Hồ sơ sắp hết hạn', v: 'expiring', ic: 'expiring', desc: 'Cảnh báo các chứng chỉ, hợp đồng sắp hết hạn' },
           { l: 'Đề nghị ngừng NCC', v: 'inactiveReq', ic: 'risk', desc: 'Xử lý các yêu cầu tạm ngừng giao dịch với NCC' },
           { l: 'Data bank', v: 'databank', ic: 'databank', desc: 'Ngân hàng dữ liệu đối chiếu thông tin NCC' },
@@ -3182,12 +3187,28 @@
       f.dataset.key = key; var cfg = FLY[key];
       $('#flytitle').textContent = cfg.t;
       $('#flybody').innerHTML = cfg.items.map(function (it, ix) {
+        if (it.isHeader) return '<div style="color:var(--faint);font-size:11px;font-weight:700;text-transform:uppercase;padding:12px 16px 4px 16px;pointer-events:none">' + it.l + '</div>';
+        if (it.isGroup) {
+          var childActive = it.items.some(sub => sub.v && st.view === sub.v);
+          var html = '<button class="flyi" style="font-weight:600" onclick="var el=this.nextElementSibling; el.style.display = el.style.display === \'none\' ? \'block\' : \'none\';">' + (it.ic && FLYIC[it.ic] ? FLYIC[it.ic] : '') + '<span style="flex:1;text-align:left">' + it.l + '</span><span style="font-size:10px;opacity:0.5">▼</span></button>';
+          html += '<div style="' + (childActive ? 'display:block;' : 'display:none;') + '">';
+          it.items.forEach((sub, subix) => {
+            var act = sub.v && st.view === sub.v;
+            html += '<button class="flyi' + (act ? ' active' : '') + '" style="padding-left:42px" onclick="flyPickSub(\'' + key + '\',' + ix + ',' + subix + ')"><span>' + sub.l + '</span></button>';
+          });
+          html += '</div>';
+          return html;
+        }
         var act = it.v && st.view === it.v && (it.ps === undefined || st.postatus === it.ps) && (it.it === undefined || st.itemtab === it.it);
         return '<button class="flyi' + (act ? ' active' : '') + (it.dis ? ' dis' : '') + '" data-tip="' + esc(it.desc || '') + '" onclick="flyPick(\'' + key + '\',' + ix + ')">' + (it.ic && FLYIC[it.ic] ? FLYIC[it.ic] : '') + '<span>' + it.l + '</span></button>';
       }).join('');
       f.classList.add('open');
     }
     function flyClose() { $('#flyout').classList.remove('open'); }
+    function flyPickSub(key, ix, subix) {
+      var it = FLY[key].items[ix].items[subix];
+      st.view = it.v; saveSt(); navSetActive(it.v); render(); flyClose();
+    }
     function flyPick(key, ix) {
       var it = FLY[key].items[ix];
       if (it.dis) return toast('Phân hệ đang xây dựng', 1);
@@ -3535,8 +3556,8 @@
         + `<select class="f" id="fseg"><option value="">Mọi phân khúc</option>${['Strategic', 'Preferred', 'Approved', 'Media', 'Transactional'].map(s => `<option ${st.fseg === s ? 'selected' : ''}>${s}</option>`).join('')}</select>`
         + `<span class="count" id="cnt"></span>`
         + `<input type="file" id="excel-file-in" accept=".xlsx,.xls" style="display:none" onchange="handleExcelImportFile(this)">`;
-      $('#fstatus').onchange = e => { st.fstatus = e.target.value; saveSt(); renderList(); };
-      $('#fcat').onchange = e => { st.fcat = e.target.value; saveSt(); renderList(); }; $('#fseg').onchange = e => { st.fseg = e.target.value; saveSt(); renderList(); };
+      $('#fstatus').onchange = e => { st.fstatus = e.target.value; saveSt(); render(); };
+      $('#fcat').onchange = e => { st.fcat = e.target.value; saveSt(); render(); }; $('#fseg').onchange = e => { st.fseg = e.target.value; saveSt(); render(); };
     }
     const FBCLOSE = '<div style="display:flex;justify-content:flex-end;padding:6px 8px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:#fff;z-index:2"><button style="width:24px;height:24px;font-size:16px;cursor:pointer;border:none;background:var(--bg);border-radius:6px;color:var(--muted)" onclick="document.getElementById(\'factwrap\').classList.remove(\'open\')" title="Đóng">×</button></div>';
     function factbox() {
@@ -3566,7 +3587,49 @@
     }
 
     function syncAdminUI() { var _aw = document.getElementById('admwrap'); if (_aw) _aw.style.display = (MYROLE === 'Admin') ? '' : 'none'; }
-    function render() { toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'items') itemsView(); else if (st.view === 'po') poView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
+    function render() { toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'docs') docsView(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'items') itemsView(); else if (st.view === 'po') poView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
+
+    function docStatus(v, type) {
+      const typeMap = {
+        'gpkd': 'Giấy phép KD',
+        'vsattp': 'Cơ sở vệ sinh an toàn thực phẩm',
+        'iso': 'Chứng nhận ISO',
+        'haccp': 'HACCP',
+        'tcb': 'Hồ sơ TCB'
+      };
+      const tName = typeMap[type];
+      const doc = (v.docs || []).find(d => d.t === tName);
+      if (!doc) return '<span class="badge b-bad" style="background:#fff1f0;color:#cf1322;border:1px solid #ffa39e">No</span>';
+      
+      let info = "Yes";
+      const m = doc.f.match(/^\[(.*?)\]/);
+      if (m && (type === 'iso' || type === 'tcb' || type === 'haccp')) {
+         info = `Yes (${m[1]})`;
+      }
+      
+      let badgeClass = "b-ok";
+      let badgeStyle = "background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f";
+      
+      if (doc.vt && new Date(doc.vt) < new Date()) {
+         badgeClass = "b-bad";
+         badgeStyle = "background:#fff1f0;color:#cf1322;border:1px solid #ffa39e";
+         info += " (Hết hạn)";
+      }
+      return `<span class="badge ${badgeClass}" style="${badgeStyle}" title="${esc(doc.f)}">${esc(info)}</span>`;
+    }
+
+    function docsView() {
+      const rows = sortRows('docs', DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized' && (!st.fstatus || v.status === st.fstatus) && (!st.fcat || v.cat === st.fcat) && (!st.fseg || v.segment === st.fseg) && (!st.q || [v.code, v.name, v.mst].some(x => (x || '').toLowerCase().includes(st.q.toLowerCase())))));
+      const empty = st.q || st.fstatus || st.fcat || st.fseg
+        ? '<tr><td colspan="10" style="padding:26px;text-align:center;color:var(--faint)">Không có NCC khớp bộ lọc. <a href="#" onclick="clearFilters();return false" style="color:var(--blue);font-weight:600">Xóa bộ lọc</a></td></tr>'
+        : '<tr><td colspan="10" style="padding:26px;text-align:center;color:var(--faint)">Chưa có NCC giao dịch nào.</td></tr>';
+      
+      $('#content').innerHTML = `<table><thead><tr><th style="width:30px;text-align:center"><input type="checkbox" onclick="toggleAllVends(this.checked)"></th>${thSort('docs', 'code', 'Mã')}${thSort('docs', 'name', 'Tên nhà cung cấp')}${thSort('docs', 'mst', 'MST')}<th>Giấy phép KD</th><th>VSATTP</th><th>ISO</th><th>HACCP</th><th>Hồ sơ TCB</th><th>Others</th></tr></thead><tbody>${rows.map(v => `<tr data-id="${v.id}" class="${st.selId === v.id ? 'sel' : ''}"><td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="vchk" value="${v.id}" onchange="chkVend()"></td><td class="code">${v.code}</td><td title="${esc(v.name)}">${esc(v.name)}</td><td class="mono" style="font-size:12px">${v.mst}</td><td>${docStatus(v, 'gpkd')}</td><td>${docStatus(v, 'vsattp')}</td><td>${docStatus(v, 'iso')}</td><td>${docStatus(v, 'haccp')}</td><td>${docStatus(v, 'tcb')}</td><td><span style="color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">...</span></td></tr>`).join('') || empty}</tbody></table>`;
+      
+      $('#content').querySelectorAll('tr[data-id]').forEach(tr => { tr.onclick = () => { st.selId = tr.dataset.id; render(); }; tr.ondblclick = () => openEdit(); });
+      const c = $('#cnt'); if (c) { var _sa = DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized').length; c.textContent = rows.length + ' / ' + _sa + ' NCC giao dịch'; }
+    }
+
     function renderList() {
       const rows = sortRows('vendors', DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized' && (!st.fstatus || v.status === st.fstatus) && (!st.fcat || v.cat === st.fcat) && (!st.fseg || v.segment === st.fseg) && (!st.q || [v.code, v.name, v.mst].some(x => (x || '').toLowerCase().includes(st.q.toLowerCase())))));
       const segB = { Strategic: 'b-ok', Preferred: 'b-warn', Approved: 'b-neutral', Media: 'b-warn', Transactional: 'b-neutral' };
@@ -3580,15 +3643,16 @@
     }
     function clearFilters() { st.q = ''; st.fstatus = ''; st.fcat = ''; st.fseg = ''; var q = $('#q'); if (q) q.value = ''; saveSt(); render(); }
     /* ---------- Sort bảng dùng chung ---------- */
-    var SORT = { vendors: { k: null, d: 1 }, po: { k: null, d: 1 }, dloc: { k: null, d: 1 } };
+    var SORT = { vendors: { k: null, d: 1 }, docs: { k: null, d: 1 }, po: { k: null, d: 1 }, dloc: { k: null, d: 1 } };
     var SORTK = {
       vendors: { code: v => v.code, name: v => v.name, mst: v => v.mst, cat: v => v.cat, segment: v => v.segment || '', risk: v => isRisk(v.mst) ? 2 : (capitalRisk(v) ? 1 : 0), age: v => { var a = coAge(v); return a ? a.months : 99999; }, capital: v => Number(v.charter_capital || 0), ytd: v => Number(v.ytd_purchase || 0), status: v => v.status },
+      docs: { code: v => v.code, name: v => v.name, mst: v => v.mst },
       po: { po_no: p => p.po_no, vendor: p => p.vendor_name || p.vendor_code, order_date: p => p.order_date || '', amount: p => Number(p.amount_total || 0), status: p => p.status, sup: p => p.supplier_status || '' },
       dloc: { code: d => d.code, cinema: d => d.cinema || '', region: d => d.region || '', hours: d => d.delivery_hours || '', contact: d => d.contact1 || '', breg: d => d.building_reg ? 1 : 0 }
     };
     function toggleSort(tbl, key) {
       var s = SORT[tbl]; if (s.k === key) s.d = -s.d; else { s.k = key; s.d = 1; }
-      if (tbl === 'vendors') renderList(); else if (tbl === 'po') renderPO(); else if (tbl === 'dloc') dlocView();
+      if (tbl === 'vendors') renderList(); else if (tbl === 'docs') docsView(); else if (tbl === 'po') renderPO(); else if (tbl === 'dloc') dlocView();
     }
     function sortRows(tbl, rows) {
       var s = SORT[tbl]; if (!s.k) return rows; var fn = SORTK[tbl][s.k]; if (!fn) return rows; var arr = rows.slice();
@@ -3717,15 +3781,16 @@
     ${ftab('docs', 'Hồ sơ đính kèm <button class="imhelpq" style="width:18px;height:18px;border-radius:50%;background:#e0a92e;color:#fff;border:none;font-weight:bold;margin-left:8px;cursor:pointer;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;" onclick="event.stopPropagation(); showDocsHelp()" title="Hướng dẫn tải lên hồ sơ">?</button>', false, `
      <table class="mini" style="margin-bottom:12px"><thead><tr><th>Loại</th><th>Tệp</th><th>Ngày ký</th><th>Hết hạn</th><th>Auto-Renew</th><th>Trạng thái</th><th>PIC</th><th></th></tr></thead><tbody id="docbody">${docRows()}</tbody></table>
      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <select id="dtype" class="f" onchange="dtToggle(this.value)">${['Giấy phép KD', 'Giấy ủy quyền', 'Hợp đồng nguyên tắc', 'Hợp đồng mua bán', 'Hợp đồng dịch vụ', 'Chứng nhận ATTP', 'Bảng đánh giá SA', 'Khác'].map(t => `<option>${t}</option>`).join('')}</select>
+      <select id="dtype" class="f" onchange="dtToggle(this.value)">${['Giấy phép KD', 'Giấy ủy quyền', 'Hợp đồng nguyên tắc', 'Hợp đồng mua bán', 'Hợp đồng dịch vụ', 'Cơ sở vệ sinh an toàn thực phẩm', 'Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP', 'Bảng đánh giá SA', 'Khác'].map(t => `<option>${t}</option>`).join('')}</select>
       <input id="dtypeOther" class="f" placeholder="Ghi rõ loại hồ sơ" style="display:none;width:160px">
+      <input id="dext" class="f" placeholder="Số hồ sơ/Chứng nhận (AI điền)" style="display:none;width:180px">
       <input type="date" id="dissue" class="f" title="Ngày ký (bắt đầu)">
       <input type="date" id="dvalid" class="f req" title="Ngày hết hạn (bắt buộc)">
       <label style="display:flex;align-items:center;font-size:12px;gap:4px;white-space:nowrap"><input type="checkbox" id="drenew">Tự động gia hạn</label>
       <select id="dstatus" class="f"><option>Đang hiệu lực</option><option>Đã thanh lý</option><option>Đã hủy</option></select>
       <input type="text" id="dpic" class="f" placeholder="Email/Tên PIC (bắt buộc)" title="Email PIC nhận thông báo">
      </div>
-     <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input type="file" class="req" id="dfile" accept="image/png,image/jpeg,image/webp,application/pdf,.xlsx,.xls,.csv,.docx" onchange="extractDoc()"><span id="dextract" style="font-size:11.5px;color:var(--muted);align-self:center"></span>${isNew ? '' : '<button id="addDocBtn" class="btn pri" onclick="uploadDoc()">+ Thêm hồ sơ</button>'}</div>
+     <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input type="file" class="req" id="dfile" accept="image/png,image/jpeg,image/webp,application/pdf,.xlsx,.xls,.csv,.docx,.txt" onchange="extractDoc()"><span id="dextract" style="font-size:11.5px;color:var(--muted);align-self:center"></span>${isNew ? '' : '<button id="addDocBtn" class="btn pri" onclick="uploadDoc()">+ Thêm hồ sơ</button>'}</div>
      <div style="color:var(--muted);font-size:11px;margin-top:6px"><b>🤖 Điền tự động (AI):</b> chọn tài liệu (Word, Excel, CSV, Ảnh, PDF) → AI tự đọc và điền Tên, MST, địa chỉ, người ĐDPL, vốn điều lệ… vào các tab (cần nhập <b>🔑 Gemini</b> ở góc trên một lần. <a href="#" onclick="showApiHelp(event)" style="color:var(--blue);text-decoration:none;font-weight:600">Xem hướng dẫn lấy Key</a>). ${isNew ? 'Tệp đang chọn sẽ được <b>tự đính kèm khi bấm Lưu</b> (tạo NCC).' : 'Tệp đang chọn sẽ được <b>tự đính kèm khi bấm Lưu</b>, hoặc bấm <b>+ Thêm hồ sơ</b> để đính kèm ngay và chọn thêm tệp khác.'}</div>`)}
     ${ftab('alias', 'Alias (Vista / Nav)', false, (v.aliases || []).length ? `<table class="mini"><thead><tr><th>Hệ</th><th>Tên gốc</th><th>TT</th></tr></thead><tbody>${v.aliases.map(a => `<tr><td>${a.s}</td><td>${esc(a.v)}</td><td>${a.st}</td></tr>`).join('')}</tbody></table>` : '<div style="color:var(--faint)">Không có alias.</div>')}
    </div>
@@ -3957,7 +4022,10 @@
   "headcount": "Tổng nhân sự - CHỈ lấy số nguyên, nếu không có để trống",
   "doc_expiry_date": "Ngày hết hạn của tài liệu (nếu có, ví dụ ngày hết hạn hợp đồng, ngày hết hạn chứng nhận), định dạng YYYY-MM-DD. Nếu không có để trống.",
   "doc_auto_renew": "Đúng (true) nếu tài liệu có ghi điều khoản 'tự động gia hạn', 'tự động kéo dài' hoặc 'auto-renew'. Sai (false) nếu không có.",
-  "doc_type": "Phân loại tài liệu, CHỈ trả về đúng 1 trong các chuỗi sau: 'Giấy phép KD', 'Giấy ủy quyền', 'Hợp đồng nguyên tắc', 'Hợp đồng mua bán', 'Hợp đồng dịch vụ', 'Chứng nhận ATTP', 'Bảng đánh giá SA'. Nếu không chắc chắn, trả về 'Khác'"
+  "iso_cert": "Loại chứng nhận ISO, ví dụ '9001:2015'. Trả về chuỗi rỗng nếu không phải tài liệu ISO hoặc không thấy.",
+  "tcb_record": "Số hồ sơ Tự công bố (TCB) hoặc loại hồ sơ TCB, ví dụ '3'. Trả về chuỗi rỗng nếu không phải tài liệu TCB hoặc không thấy.",
+  "haccp_cert": "Thông tin chứng nhận HACCP. Trả về chuỗi rỗng nếu không phải HACCP hoặc không thấy.",
+  "doc_type": "Phân loại tài liệu, CHỈ trả về đúng 1 trong các chuỗi sau: 'Giấy phép KD', 'Giấy ủy quyền', 'Hợp đồng nguyên tắc', 'Hợp đồng mua bán', 'Hợp đồng dịch vụ', 'Cơ sở vệ sinh an toàn thực phẩm', 'Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP', 'Bảng đánh giá SA'. Nếu không chắc chắn, trả về 'Khác'"
 }`;
     function extractPrompt(intro) {
       return intro + `
@@ -4009,6 +4077,18 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
           dtype.value = d.doc_type;
           if (typeof dtToggle === 'function') dtToggle(d.doc_type);
           changes.push('Loại tài liệu');
+          if (d.iso_cert && d.doc_type === 'Chứng nhận ISO') {
+             const e = $('#dext'); if (e) e.value = d.iso_cert;
+             changes.push('Số chứng nhận ISO');
+          }
+          if (d.tcb_record && d.doc_type === 'Hồ sơ TCB') {
+             const e = $('#dext'); if (e) e.value = d.tcb_record;
+             changes.push('Số TCB');
+          }
+          if (d.haccp_cert && d.doc_type === 'HACCP') {
+             const e = $('#dext'); if (e) e.value = d.haccp_cert;
+             changes.push('HACCP');
+          }
           const addBtn = $('#addDocBtn');
           if (addBtn && form && form.docs) {
             const isDup = form.docs.some(doc => doc.doc_type === d.doc_type);
@@ -4201,12 +4281,18 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       if (!dvalid) return { done: false, err: 'Vui lòng nhập Ngày hết hạn.' };
       if (!dpic) return { done: false, err: 'Vui lòng nhập Email/Tên PIC phụ trách.' };
 
-      const file = fi.files[0], path = vid + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_');
+      const file = fi.files[0];
+      let fname = file.name;
+      if (['Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP'].includes(t)) {
+         var dext = $('#dext') && $('#dext').value.trim();
+         if (dext) fname = `[${dext}] ${fname}`;
+      }
+      const path = vid + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_');
       const { error: ue } = await sb.storage.from('vendor-docs').upload(path, file); if (ue) return { done: false, err: 'Lỗi tải tệp: ' + ue.message };
 
-      const { data: existingDocs } = await sb.from('vendor_document').select('id, storage_path').eq('vendor_id', vid).eq('doc_type', t).eq('file_name', file.name);
+      const { data: existingDocs } = await sb.from('vendor_document').select('id, storage_path').eq('vendor_id', vid).eq('doc_type', t).eq('file_name', fname);
       let existDoc = existingDocs && existingDocs.length > 0 ? existingDocs[0] : null;
-      const payload = { vendor_id: vid, doc_type: t, file_name: file.name, storage_path: path, valid_to: dvalid || null, issue_date: dissue || null, is_auto_renew: drenew || false, doc_status: dstatus, pic_email: dpic };
+      const payload = { vendor_id: vid, doc_type: t, file_name: fname, storage_path: path, valid_to: dvalid || null, issue_date: dissue || null, is_auto_renew: drenew || false, doc_status: dstatus, pic_email: dpic };
 
       if (existDoc) {
         const { error: ue2 } = await sb.from('vendor_document').update(payload).eq('id', existDoc.id);
@@ -7599,6 +7685,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         + '<div class="imhstep"><span>1</span><p><b>Thêm hồ sơ thủ công:</b> Chọn "Loại tài liệu", nhập Ngày ký / Ngày hết hạn, chọn Tệp và bấm <b>+ Thêm hồ sơ</b>.</p></div>'
         + '<div class="imhstep"><span>2</span><p><b>Tự động gia hạn:</b> Tích vào ô <b>Tự động gia hạn</b> nếu hợp đồng/giấy tờ tự renew hàng năm để hệ thống không báo hết hạn.</p></div>'
         + '<div class="imhstep"><span>3</span><p><b>Dùng AI (Điền tự động):</b> Đừng gõ tay! Hãy sang tab "AI Trích xuất", chọn file văn bản. AI sẽ tự đọc ra "Loại hồ sơ", "Ngày hết hạn" và <b>tự động đính kèm</b> vào mục này khi bạn bấm Lưu.</p></div>'
+        + '<div class="imhstep"><span>4</span><p><b>Trích xuất số liệu:</b> Đối với chứng nhận ISO, TCB, HACCP, AI sẽ tự động đọc thêm số hiệu/phiên bản (VD: 9001:2015) và cập nhật thẳng ra màn hình Chứng từ.</p></div>'
         + '<div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">'
         + '<label style="font-size:13px;color:#4a5568;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="chkNoShowDocsHelp"> <b>Không hiển thị lại</b></label>'
         + '<button class="btn pri" onclick="closeDocsHelp()" style="padding:6px 16px;">Đã hiểu</button>'

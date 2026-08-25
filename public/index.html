@@ -2779,15 +2779,32 @@
 <body>
   <div id="loader">Đang tải…</div>
   <div id="login" style="display:none">
-    <div class="box">
+    <div class="box" id="loginBox">
       <h1>Supplier Management</h1>
       <p>G-ERP · Galaxy Cinema</p>
       <input id="le" type="email" placeholder="Email" autocomplete="username" value="sonbn@galaxystudio.vn">
       <input id="lp" type="password" placeholder="Mật khẩu" autocomplete="current-password" value="12345678">
       <button class="btn pri" onclick="doLogin()">Đăng nhập</button>
+      <div style="margin-top:12px;text-align:center;font-size:13px">
+        Chưa có tài khoản? <a href="#" style="color:#2b6cb0;text-decoration:none;font-weight:600" onclick="$('#loginBox').style.display='none'; $('#regBox').style.display='block'; $('#rerr').textContent=''; $('#rsucc').style.display='none';">Đăng ký đối tác mới</a>
+      </div>
       <div class="err" id="lerr"></div>
-      <div style="margin-top:10px;font-size:11px;color:#aaa;text-align:center">Tài khoản: <b
-          style="color:#ddd">sonbn@galaxystudio.vn</b> / Mật khẩu: <b style="color:#ddd">12345678</b></div>
+      <div style="margin-top:10px;font-size:11px;color:#aaa;text-align:center">Tài khoản: <b style="color:#ddd">sonbn@galaxystudio.vn</b> / Mật khẩu: <b style="color:#ddd">12345678</b></div>
+    </div>
+
+    <div class="box" id="regBox" style="display:none">
+      <h1 style="color:#2b6cb0">Đăng ký Đối Tác</h1>
+      <p>Hệ thống Supplier Portal</p>
+      <input id="re" type="email" placeholder="Email (dùng để đăng nhập)">
+      <input id="rp" type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)">
+      <input id="rc" type="text" placeholder="Tên Công Ty / Tổ Chức">
+      <input id="rt" type="text" placeholder="Mã số thuế (nếu có)">
+      <button class="btn pri" id="btnReg" onclick="doRegister()">Gửi yêu cầu Đăng ký</button>
+      <div style="margin-top:12px;text-align:center;font-size:13px">
+        Đã có tài khoản? <a href="#" style="color:#666;text-decoration:underline" onclick="$('#regBox').style.display='none'; $('#loginBox').style.display='block';">Quay lại Đăng nhập</a>
+      </div>
+      <div class="err" id="rerr"></div>
+      <div id="rsucc" style="color:#147a52;font-size:13.5px;font-weight:600;margin-top:10px;display:none;text-align:center;background:#e6f4ea;padding:10px;border-radius:6px;border:1px solid #bce2c7"></div>
     </div>
   </div>
 
@@ -2854,7 +2871,7 @@
               <path d="M5.2 5 18.8 18.6M18.8 5 5.2 18.6" />
               <path d="M5.6 8.6h12.8M6.6 5h10.8" />
               <path d="M5.2 18.6v1.8M18.8 18.6v1.8" />
-            </svg>Quản trị người dùng</button>
+            </svg>Quản trị người dùng<span id="pendingBadge" style="display:none;background:#e53e3e;color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:auto;font-weight:bold;line-height:1;margin-top:1px">0</span></button>
 
         </div>
         <div class="foot">Nguồn chuẩn (MDM) — đẩy xuống Nav &amp; Vista</div>
@@ -3393,12 +3410,48 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) showLogin(); else { me = session.user; await boot(); }
     }
-    function showLogin() { $('#loader').style.display = 'none'; $('#login').style.display = 'flex'; }
+    function showLogin() { $('#loader').style.display = 'none'; $('#login').style.display = 'flex'; $('#loginBox').style.display='block'; $('#regBox').style.display='none'; }
+    
+    async function doRegister() {
+      $('#rerr').textContent = ''; $('#rsucc').style.display = 'none';
+      const em = $('#re').value.trim().toLowerCase(), pw = $('#rp').value, cn = $('#rc').value.trim(), tx = $('#rt').value.trim();
+      if (!em || !pw || !cn) { $('#rerr').textContent = 'Vui lòng nhập đủ Email, Mật khẩu và Tên Công Ty.'; return; }
+      if (pw.length < 6) { $('#rerr').textContent = 'Mật khẩu phải từ 6 ký tự trở lên.'; return; }
+      
+      $('#btnReg').disabled = true; $('#btnReg').textContent = 'Đang đăng ký...';
+      try {
+        const { data, error } = await sb.auth.signUp({ email: em, password: pw });
+        if (error) throw error;
+        
+        const { error: dbErr } = await sb.from('vendor_registrations').insert({
+           email: em, company_name: cn, tax_code: tx, status: 'Pending'
+        });
+        if (dbErr && dbErr.code !== '42P01') { console.error(dbErr); } // Ignore if table doesn't exist yet for demo
+        
+        $('#re').style.display = 'none'; $('#rp').style.display = 'none'; $('#rc').style.display = 'none'; $('#rt').style.display = 'none'; $('#btnReg').style.display = 'none';
+        $('#rsucc').innerHTML = '✅ Đăng ký thành công!<br><br>Tài khoản của bạn đã được gửi đến Ban Giám Đốc chờ phê duyệt.<br>Bạn sẽ nhận được email thông báo khi được duyệt.';
+        $('#rsucc').style.display = 'block';
+      } catch(e) {
+        $('#rerr').textContent = e.message;
+        $('#btnReg').disabled = false; $('#btnReg').textContent = 'Gửi yêu cầu Đăng ký';
+      }
+    }
+
     async function doLogin() {
       $('#lerr').textContent = '';
       const { data, error } = await sb.auth.signInWithPassword({ email: $('#le').value.trim(), password: $('#lp').value });
       if (error) { $('#lerr').textContent = error.message; return; }
-      me = data.user; $('#login').style.display = 'none'; $('#loader').style.display = 'flex'; $('#loader').textContent = 'Đang tải dữ liệu…'; await boot();
+      me = data.user; 
+      
+      try {
+        const { data: reg } = await sb.from('vendor_registrations').select('status').eq('email', me.email.toLowerCase()).maybeSingle();
+        if (reg) {
+            if (reg.status === 'Pending') { await sb.auth.signOut(); $('#lerr').textContent = 'Tài khoản của bạn đang chờ Ban Giám Đốc duyệt.'; return; }
+            if (reg.status === 'Rejected') { await sb.auth.signOut(); $('#lerr').textContent = 'Yêu cầu đăng ký của bạn đã bị từ chối.'; return; }
+        }
+      } catch(e) { /* Ignore if table not created yet */ }
+      
+      $('#login').style.display = 'none'; $('#loader').style.display = 'flex'; $('#loader').textContent = 'Đang tải dữ liệu…'; await boot();
     }
     async function logout() { await sb.auth.signOut(); location.reload(); }
     async function boot() {
@@ -3408,6 +3461,12 @@
       await loadSharedGeminiKey(); navMinInit();
       $('#loader').style.display = 'none'; $('#app').style.display = 'flex'; $('#who').textContent = me.email;
       if (MYROLE !== 'Admin') { var _un = document.querySelector('.navi[data-view="users"]'); if (_un) _un.style.display = 'none'; }
+      else {
+         try {
+            const { count } = await sb.from('vendor_registrations').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+            if (count > 0) { const b = $('#pendingBadge'); if(b) { b.textContent = count; b.style.display = 'inline-block'; } }
+         } catch(e) {}
+      }
       var _f = DB.find(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized'); st.selId = _f ? _f.id : (DB[0] ? DB[0].id : null); navSetActive(st.view); render();
       setTimeout(autoCheckAndSendExpiringEmails, 800);
     }
@@ -6908,6 +6967,7 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       if (MYROLE !== 'Admin') { toast('Chỉ Admin được vào Quản trị người dùng', 1); st.view = 'vendors'; navSetActive('vendors'); return render(); }
       $('#content').innerHTML = '<div class="import"><div style="font-weight:650;margin-bottom:4px">Người dùng & phân quyền</div>'
         + '<div style="color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.5"><b>Buyer</b>: tạo/nhập liệu · <b>Approver</b>: duyệt NCC · <b>Accounting</b>: xác nhận hạch toán + duyệt đổi TK ngân hàng · <b>Viewer</b>: chỉ xem · <b>Admin</b>: toàn quyền. Tài khoản chưa gán vai trò = Buyer (khi đã có ít nhất 1 người được gán).</div>'
+        + '<div style="margin-bottom:16px"><button class="btn" style="border:1px solid #1890ff;color:#1890ff;font-weight:600" onclick="showVendorApprovals()">+ Duyệt yêu cầu Đăng ký Đối tác (NCC)</button></div>'
         + '<div id="ulist" style="color:var(--muted)">Đang tải…</div>'
         + '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px"><div style="font-weight:650;margin-bottom:8px">Tạo tài khoản mới</div>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="ue" placeholder="Email" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;width:230px">'
@@ -6946,6 +7006,94 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         if (em === (me.email || '').toLowerCase()) { MYROLE = role || (Object.keys(ROLES).length ? 'Buyer' : 'Admin'); if (MYROLE !== 'Admin') toast('⚠ Bạn vừa đổi vai trò của CHÍNH MÌNH thành ' + MYROLE + ' — sẽ mất quyền Admin sau khi tải lại trang', 1); }
       } catch (err) { toast('Lỗi: ' + (err.message || err), 1); if (el) usersView(); }
       finally { if (el) el.disabled = false; }
+    }
+    
+    async function showVendorApprovals() {
+      if (MYROLE !== 'Admin') return toast('Chỉ Admin mới có quyền duyệt', 1);
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+      box.className = 'overlay-approvals';
+      box.innerHTML = '<div style="background:#fff;padding:24px;border-radius:12px;width:800px;max-width:95%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2);position:relative">'
+        + '<button onclick="this.closest(\'.overlay-approvals\').remove()" style="position:absolute;top:16px;right:16px;border:none;background:transparent;font-size:20px;cursor:pointer;color:#999">&times;</button>'
+        + '<h3 style="margin-top:0;color:#2b6cb0">Danh sách chờ duyệt Đăng ký Đối tác</h3>'
+        + '<div id="apprList">Đang tải...</div>'
+        + '</div>';
+      document.body.appendChild(box);
+      renderVendorApprovals();
+    }
+    
+    async function renderVendorApprovals() {
+      const p = document.getElementById('apprList'); if (!p) return;
+      try {
+        const { data, error } = await sb.from('vendor_registrations').select('*').order('created_at', { ascending: false });
+        if (error) { p.innerHTML = 'Lỗi tải danh sách: ' + error.message; return; }
+        if (!data || !data.length) { 
+           p.innerHTML = '<div style="padding:20px;text-align:center;color:#666">Chưa có yêu cầu nào.</div>'; 
+           const b = $('#pendingBadge'); if(b) b.style.display='none';
+           return; 
+        }
+        
+        const pc = data.filter(r => r.status === 'Pending').length;
+        const b = $('#pendingBadge'); if(b) { if(pc>0) {b.textContent=pc; b.style.display='inline-block';} else b.style.display='none'; }
+        
+        let out = '<table class="mini"><thead><tr><th>Tên Công Ty</th><th>MST</th><th>Email</th><th>Trạng thái</th><th>Hành động (Gán Mã Vendor)</th></tr></thead><tbody>';
+        data.forEach(r => {
+          out += `<tr>
+            <td style="font-weight:600">${esc(r.company_name)}</td>
+            <td>${esc(r.tax_code || '')}</td>
+            <td>${esc(r.email)}</td>
+            <td>${
+              r.status === 'Pending' ? '<span class="badge b-warn">Chờ duyệt</span>' : 
+              (r.status === 'Approved' ? '<span class="badge b-ok">Đã duyệt</span>' : '<span class="badge b-bad">Từ chối</span>')
+            }</td>
+            <td>
+              ${r.status === 'Pending' ? `
+                <div style="display:flex;gap:6px">
+                  <input type="text" id="vcode_${r.id}" placeholder="Mã Vendor (VD: VD001)" style="width:140px;padding:4px 8px;border:1px solid #ccc;border-radius:4px">
+                  <button class="btn pri" style="padding:4px 8px;font-size:12px" onclick="approveVendorReg('${r.id}', '${esc(r.email)}')">Duyệt</button>
+                  <button class="btn" style="padding:4px 8px;font-size:12px;color:red" onclick="rejectVendorReg('${r.id}')">Từ chối</button>
+                </div>
+              ` : `
+                ${r.assigned_vendor_code ? 'Gán mã: <b>' + esc(r.assigned_vendor_code) + '</b>' : '—'}
+              `}
+            </td>
+          </tr>`;
+        });
+        out += '</tbody></table>';
+        p.innerHTML = out;
+      } catch(e) { p.innerHTML = 'Lỗi: ' + e.message; }
+    }
+    
+    async function approveVendorReg(id, email) {
+      const vc = document.getElementById('vcode_' + id).value.trim().toUpperCase();
+      if (!vc) return toast('Vui lòng nhập Mã Vendor để gán cho đối tác này.', 1);
+      
+      const { error } = await sb.from('vendor_registrations').update({
+        status: 'Approved',
+        assigned_vendor_code: vc,
+        decided_by: me.email,
+        decided_at: new Date().toISOString()
+      }).eq('id', id);
+      
+      if (error) return toast('Lỗi: ' + error.message, 1);
+      
+      // Upsert vào app_supplier
+      await sb.from('app_supplier').upsert({ email: email.toLowerCase(), vendor_code: vc }, { onConflict: 'email' });
+      
+      toast('Đã duyệt và gán mã ' + vc);
+      renderVendorApprovals();
+    }
+    
+    async function rejectVendorReg(id) {
+      if (!confirm('Bạn chắc chắn muốn từ chối đối tác này?')) return;
+      const { error } = await sb.from('vendor_registrations').update({
+        status: 'Rejected',
+        decided_by: me.email,
+        decided_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) return toast('Lỗi: ' + error.message, 1);
+      toast('Đã từ chối.');
+      renderVendorApprovals();
     }
     async function uAdd() {
       const e = $('#ue').value.trim(), p = $('#up').value, ro = $('#ur') ? $('#ur').value : 'Buyer';

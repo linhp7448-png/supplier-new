@@ -3141,8 +3141,8 @@
         t: 'Supplier Management', items: [
           { l: 'Dashboard', v: 'dash', ic: 'dash', desc: 'Tổng quan số liệu và tình hình quản lý nhà cung cấp' },
           { l: 'Nhà cung cấp', isGroup: true, ic: 'vendors', items: [
-             { l: 'Rủi ro về thuế', v: 'vendors', desc: 'Quản lý danh sách, hồ sơ và theo dõi rủi ro' },
-             { l: 'Chứng từ', v: 'docs', desc: 'Quản lý chứng từ rủi ro về thuế' }
+             { l: 'Hồ sơ & Đánh giá rủi ro', v: 'vendors', desc: 'Quản lý danh sách, hồ sơ và theo dõi rủi ro' },
+             { l: 'Quản lý Chứng từ', v: 'docs', desc: 'Quản lý chứng từ rủi ro về thuế' }
           ] },
           { l: 'Hồ sơ sắp hết hạn', v: 'expiring', ic: 'expiring', desc: 'Cảnh báo các chứng chỉ, hợp đồng sắp hết hạn' },
           { l: 'Đề nghị ngừng NCC', v: 'inactiveReq', ic: 'risk', desc: 'Xử lý các yêu cầu tạm ngừng giao dịch với NCC' },
@@ -3165,20 +3165,20 @@
       },
       oi: {
         t: 'Order — Inventory', items: [
-          { l: 'Order Request', dis: 1, ic: 'script', desc: 'Yêu cầu đặt hàng từ các phòng ban' },
+          { l: 'Order Request', v: 'req', ic: 'script', desc: 'Yêu cầu đặt hàng từ các phòng ban' },
           { l: 'Purchase Order', v: 'po', ps: '', ic: 'po', desc: 'Quản lý các đơn đặt hàng (PO) đã duyệt' },
           { l: '· Supplier Confirm', v: 'po', ps: 'Supplier_Confirmed', desc: 'Đơn hàng đã được NCC xác nhận' },
           { l: '· Supplier Delivered', v: 'po', ps: 'Delivered', desc: 'Đơn hàng đang giao/đã giao từ NCC' },
           { l: '· Supplier Rejected', v: 'po', ps: 'Supplier_Rejected', desc: 'Đơn hàng bị NCC từ chối' },
-          { l: 'Good Receive', dis: 1, ic: 'box', desc: 'Quản lý phiếu nhập kho' },
-          { l: 'Good Return', dis: 1, ic: 'box', desc: 'Quản lý phiếu trả hàng' },
-          { l: '3-Way Matching', dis: 1, ic: 'reel', desc: 'Đối chiếu 3 bước (PO - GR - Hóa đơn)' },
+          { l: 'Good Receive', v: 'gr', ic: 'box', desc: 'Quản lý phiếu nhập kho' },
+          { l: 'Good Return', v: 'return', ic: 'box', desc: 'Quản lý phiếu trả hàng' },
+          { l: '3-Way Matching', v: 'matching', ic: 'reel', desc: 'Đối chiếu 3 bước (PO - GR - Hóa đơn)' },
           { l: 'Quản lý mặt hàng (ảnh SP)', v: 'items', ic: 'box', desc: 'Quản lý hình ảnh và chi tiết mặt hàng lúc giao nhận (kế thừa từ item management trong tab golden record)' },
           { l: 'Quy định giao nhận', v: 'dloc', ic: 'dloc', desc: 'Quy định và vị trí giao nhận' }
         ]
       }
     };
-    const VIEW_GRP = { dash: 'sm', vendors: 'sm', risk: 'sm', expiring: 'sm', users: 'sm', databank: 'sm', rfq: 'sm', promos: 'sm', itemmgmt: 'im', po: 'oi', dloc: 'oi', items: 'oi', users: 'adm', compadmin: 'adm2', inactiveReq: 'sm' };
+    const VIEW_GRP = { dash: 'sm', vendors: 'sm', risk: 'sm', expiring: 'sm', users: 'sm', databank: 'sm', rfq: 'sm', promos: 'sm', itemmgmt: 'im', po: 'oi', dloc: 'oi', items: 'oi', users: 'adm', compadmin: 'adm2', inactiveReq: 'sm', req: 'oi', gr: 'oi', return: 'oi', matching: 'oi' };
     function navSetActive(view) { var g = VIEW_GRP[view] || 'sm'; document.querySelectorAll('.navmain').forEach(function (b) { b.classList.toggle('active', b.dataset.fly === g); }); }
     function flyOpen(key, e) {
       if (e) e.stopPropagation();
@@ -3587,7 +3587,7 @@
     }
 
     function syncAdminUI() { var _aw = document.getElementById('admwrap'); if (_aw) _aw.style.display = (MYROLE === 'Admin') ? '' : 'none'; }
-    function render() { toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'docs') docsView(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'items') itemsView(); else if (st.view === 'po') poView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
+    function render() { toolbar(); syncAdminUI(); if (st.view === 'dash') dashView(); else if (st.view === 'itemmgmt') itemMgmtView(); else if (st.view === 'databank') databankView(); else if (st.view === 'rfq') rfqView(); else if (st.view === 'dloc') dlocView(); else if (st.view === 'vendors') renderList(); else if (st.view === 'docs') docsView(); else if (st.view === 'expiring') expiringView(); else if (st.view === 'users') usersView(); else if (st.view === 'inactiveReq') inactiveReqView(); else if (st.view === 'items') itemsView(); else if (st.view === 'po') poView(); else if (st.view === 'req') reqView(); else if (st.view === 'gr') grView(); else if (st.view === 'return') returnView(); else if (st.view === 'matching') matchingView(); else if (st.view === 'promos') promosView(); else riskView(); factbox(); }
 
     function docStatus(v, type) {
       const typeMap = {
@@ -3801,8 +3801,8 @@
     const MSTSTAT = { ACTIVE: ['Đang hoạt động', 'b-ok'], NOT_AT_ADDRESS: ['Không HĐ tại địa chỉ ĐK', 'b-bad'], SUSPENDED: ['Tạm ngừng hoạt động', 'b-bad'], CEASED: ['Đã ngừng hoạt động', 'b-bad'], PENDING_CLOSE: ['Đang làm thủ tục đóng MST', 'b-bad'], UNKNOWN: ['Chưa rõ', 'b-neutral'] };
     function mstStatBadge(code, note) { if (!code) return ''; var m = MSTSTAT[code] || MSTSTAT.UNKNOWN; return '<span class="badge ' + m[1] + '" title="' + esc(note || '') + '">' + m[0] + '</span>'; }
     function mstStatBad(code) { return code && code !== 'ACTIVE' && code !== 'UNKNOWN'; }
-    const SEARCH_MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    const URLCTX_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite']; // url_context chỉ hỗ trợ dòng 2.5
+    const SEARCH_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+    const URLCTX_MODELS = ['gemini-flash-latest'];
     async function geminiToolCall(prompt, tools, models, mi = 0) {
       if (!GEMINI_KEY) throw new Error('Chưa có Gemini API key — bấm nút 🔑 Gemini ở góc trên để nhập.');
       models = models || SEARCH_MODELS; tools = tools || [{ google_search: {} }];
@@ -3928,7 +3928,7 @@
     }
 
     // ---- Gọi Gemini trực tiếp từ trình duyệt (có retry + tự chuyển model khi quá tải) ----
-    const GEMINI_MODEL = 'gemini-2.5-flash';
+    const GEMINI_MODEL = 'gemini-flash-latest';
     const GEMINI_API_VER = 'v1beta';
     function gemStatus(m) { var el = $('#dextract'); if (el) el.textContent = m; }
     function modelSupportsThinking(model) { return false; }
@@ -4678,8 +4678,9 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
             for (var i = hIdx + 1; i < rowsC.length; i++) {
               var r = rowsC[i]; if (!r || !r.length) continue;
               var vcode = idxCode >= 0 ? String(r[idxCode] || '').trim() : '';
-              if (!vcode || vcode === 'undefined' || vcode === 'nan') continue;
-              var v = DB.find(x => x.code === vcode);
+              var vname = idxName >= 0 ? String(r[idxName] || '').trim() : '';
+              if (!vcode && !vname) continue;
+              var v = DB.find(x => (vcode && x.code === vcode) || (vname && x.name.toLowerCase() === vname.toLowerCase()));
               if (v) {
                 countVendors++;
                 var picName = idxPic >= 0 ? String(r[idxPic] || '').trim() : '';
@@ -8369,6 +8370,115 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       if (success > 0 && typeof itemsView === 'function') itemsView();
     }
     // --- END BULK PASTE URL LOGIC ---
+
+    async function reqView() {
+      $('#content').innerHTML = '<div style="padding:16px;color:var(--muted)">Đang tải Yêu cầu mua hàng...</div>';
+      var res = await sb.from('order_request').select('*').order('request_date', { ascending: false }).limit(500);
+      if (res.error) { $('#content').innerHTML = '<div style="padding:16px;color:var(--bad)">Lỗi (Có thể chưa tạo bảng): ' + esc(res.error.message) + '</div>'; return; }
+      var ds = res.data || []; toolbar();
+      $('#content').innerHTML = '<div style="padding:16px 24px;border-bottom:1px solid var(--line);background:#fafafa"><button class="btn pri" onclick="reqNew()">+ Tạo Yêu cầu đặt hàng mới</button></div>' + 
+      '<table><thead><tr><th>PR No.</th><th>Phòng ban</th><th>Người yêu cầu</th><th>Mô tả hàng hóa</th><th>Số lượng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>' +
+        (ds.map(function(d) { return '<tr><td class="code">' + esc(d.pr_no) + '</td><td>' + esc(d.department) + '</td><td>' + esc(d.requested_by) + '</td><td>' + esc(d.item_description) + '</td><td>' + (d.quantity||0) + '</td><td><span class="badge b-neutral">' + esc(d.status) + '</span></td><td><button class="tbtn" style="color:var(--bad)" onclick="reqDel(\'' + d.id + '\')">Xóa</button></td></tr>'; }).join('') || '<tr><td colspan=7 style="padding:24px;text-align:center;color:var(--faint)">Không có Yêu cầu đặt hàng.</td></tr>') + '</tbody></table>';
+    }
+
+    async function grView() {
+      $('#content').innerHTML = '<div style="padding:16px;color:var(--muted)">Đang tải Phiếu nhập kho...</div>';
+      var res = await sb.from('goods_receipt').select('*').order('receipt_date', { ascending: false }).limit(500);
+      if (res.error) { $('#content').innerHTML = '<div style="padding:16px;color:var(--bad)">Lỗi (Có thể chưa tạo bảng): ' + esc(res.error.message) + '</div>'; return; }
+      var ds = res.data || []; toolbar();
+      $('#content').innerHTML = '<div style="padding:16px 24px;border-bottom:1px solid var(--line);background:#fafafa"><button class="btn pri" onclick="grNew()">+ Tạo Phiếu nhập kho mới</button></div>' + 
+      '<table><thead><tr><th>GR No.</th><th>Ngày nhập</th><th>Người nhận</th><th>Số lượng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>' +
+        (ds.map(function(d) { return '<tr><td class="code">' + esc(d.gr_no) + '</td><td>' + (d.receipt_date||'') + '</td><td>' + esc(d.received_by) + '</td><td>' + (d.received_qty||0) + '</td><td><span class="badge b-neutral">' + esc(d.status) + '</span></td><td><button class="tbtn" style="color:var(--bad)" onclick="grDel(\'' + d.id + '\')">Xóa</button></td></tr>'; }).join('') || '<tr><td colspan=6 style="padding:24px;text-align:center;color:var(--faint)">Không có Phiếu nhập kho.</td></tr>') + '</tbody></table>';
+    }
+
+    async function returnView() {
+      $('#content').innerHTML = '<div style="padding:16px;color:var(--muted)">Đang tải Phiếu trả hàng...</div>';
+      var res = await sb.from('goods_return').select('*').order('return_date', { ascending: false }).limit(500);
+      if (res.error) { $('#content').innerHTML = '<div style="padding:16px;color:var(--bad)">Lỗi (Có thể chưa tạo bảng): ' + esc(res.error.message) + '</div>'; return; }
+      var ds = res.data || []; toolbar();
+      $('#content').innerHTML = '<div style="padding:16px 24px;border-bottom:1px solid var(--line);background:#fafafa"><button class="btn pri" onclick="returnNew()">+ Tạo Phiếu trả hàng mới</button></div>' + 
+      '<table><thead><tr><th>Return No.</th><th>Ngày trả</th><th>Lý do</th><th>Số lượng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>' +
+        (ds.map(function(d) { return '<tr><td class="code">' + esc(d.return_no) + '</td><td>' + (d.return_date||'') + '</td><td>' + esc(d.reason) + '</td><td>' + (d.return_qty||0) + '</td><td><span class="badge b-neutral">' + esc(d.status) + '</span></td><td><button class="tbtn" style="color:var(--bad)" onclick="returnDel(\'' + d.id + '\')">Xóa</button></td></tr>'; }).join('') || '<tr><td colspan=6 style="padding:24px;text-align:center;color:var(--faint)">Không có Phiếu trả hàng.</td></tr>') + '</tbody></table>';
+    }
+
+    // --- LOGIC TẠO MỚI (CREATE) ---
+    function reqNew() {
+      var id = 'PR-' + Math.floor(Math.random() * 100000);
+      $('#card').innerHTML = '<div class="cardhead"><h2>Tạo Yêu cầu đặt hàng mới</h2><button class="x" onclick="closeCard()">×</button></div>' +
+        '<div class="cardbody" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
+        '<div class="fld"><label>Mã phiếu (PR No.)</label><input id="nr_pr" value="'+id+'" readonly style="background:#f0f0f0"></div>' +
+        '<div class="fld"><label>Phòng ban</label><input id="nr_dept" placeholder="VD: Hành chính"></div>' +
+        '<div class="fld"><label>Người yêu cầu</label><input id="nr_req" placeholder="VD: Nguyễn Văn A"></div>' +
+        '<div class="fld"><label>Mô tả hàng hóa</label><input id="nr_desc" placeholder="VD: Mực in, giấy A4..."></div>' +
+        '<div class="fld"><label>Số lượng</label><input type="number" id="nr_qty" value="1" min="1"></div>' +
+        '<button class="btn pri" style="margin-top:8px;align-self:flex-start" onclick="reqSave()">Lưu Yêu cầu</button>' +
+        '</div>';
+      $('#overlay').classList.add('open');
+    }
+    async function reqSave() {
+      var d = { pr_no: $('#nr_pr').value, department: $('#nr_dept').value, requested_by: $('#nr_req').value, item_description: $('#nr_desc').value, quantity: Number($('#nr_qty').value) || 0, status: 'Pending' };
+      if (!d.item_description) return toast('Vui lòng nhập mô tả hàng hóa', 1);
+      toast('Đang lưu...'); var r = await sb.from('order_request').insert(d);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1);
+      closeCard(); toast('Đã tạo thành công!'); reqView();
+    }
+    async function reqDel(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa Yêu cầu này?')) return;
+      var r = await sb.from('order_request').delete().eq('id', id);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1); toast('Đã xóa thành công!'); reqView();
+    }
+
+    function grNew() {
+      var id = 'GR-' + Math.floor(Math.random() * 100000);
+      $('#card').innerHTML = '<div class="cardhead"><h2>Tạo Phiếu nhập kho mới</h2><button class="x" onclick="closeCard()">×</button></div>' +
+        '<div class="cardbody" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
+        '<div class="fld"><label>Mã Phiếu (GR No.)</label><input id="nr_gr" value="'+id+'" readonly style="background:#f0f0f0"></div>' +
+        '<div class="fld"><label>Người nhận</label><input id="nr_rcv" placeholder="VD: Thủ kho B"></div>' +
+        '<div class="fld"><label>Số lượng thực nhận</label><input type="number" id="nr_gqty" value="1" min="1"></div>' +
+        '<button class="btn pri" style="margin-top:8px;align-self:flex-start" onclick="grSave()">Lưu Phiếu nhập</button>' +
+        '</div>';
+      $('#overlay').classList.add('open');
+    }
+    async function grSave() {
+      var d = { gr_no: $('#nr_gr').value, received_by: $('#nr_rcv').value, received_qty: Number($('#nr_gqty').value) || 0, status: 'Draft' };
+      toast('Đang lưu...'); var r = await sb.from('goods_receipt').insert(d);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1);
+      closeCard(); toast('Đã tạo Phiếu nhập thành công!'); grView();
+    }
+    async function grDel(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa Phiếu nhập này?')) return;
+      var r = await sb.from('goods_receipt').delete().eq('id', id);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1); toast('Đã xóa thành công!'); grView();
+    }
+
+    function returnNew() {
+      var id = 'RET-' + Math.floor(Math.random() * 100000);
+      $('#card').innerHTML = '<div class="cardhead"><h2>Tạo Phiếu trả hàng mới</h2><button class="x" onclick="closeCard()">×</button></div>' +
+        '<div class="cardbody" style="padding:16px;display:flex;flex-direction:column;gap:12px">' +
+        '<div class="fld"><label>Mã Phiếu Trả (Return No.)</label><input id="nr_ret" value="'+id+'" readonly style="background:#f0f0f0"></div>' +
+        '<div class="fld"><label>Lý do trả hàng</label><input id="nr_reason" placeholder="VD: Hàng bị móp méo"></div>' +
+        '<div class="fld"><label>Số lượng trả</label><input type="number" id="nr_rqty" value="1" min="1"></div>' +
+        '<button class="btn pri" style="margin-top:8px;align-self:flex-start" onclick="returnSave()">Lưu Phiếu trả</button>' +
+        '</div>';
+      $('#overlay').classList.add('open');
+    }
+    async function returnSave() {
+      var d = { return_no: $('#nr_ret').value, reason: $('#nr_reason').value, return_qty: Number($('#nr_rqty').value) || 0, status: 'Draft' };
+      if (!d.reason) return toast('Vui lòng nhập lý do trả hàng', 1);
+      toast('Đang lưu...'); var r = await sb.from('goods_return').insert(d);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1);
+      closeCard(); toast('Đã tạo Phiếu trả thành công!'); returnView();
+    }
+    async function returnDel(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa Phiếu trả này?')) return;
+      var r = await sb.from('goods_return').delete().eq('id', id);
+      if (r.error) return toast('Lỗi: ' + r.error.message, 1); toast('Đã xóa thành công!'); returnView();
+    }
+
+    async function matchingView() {
+      $('#content').innerHTML = '<div style="padding:16px;color:var(--muted)">Tính năng Đối chiếu 3 chiều (3-Way Matching) đang được hoàn thiện. Vui lòng thêm dữ liệu Hóa đơn trước.</div>';
+      toolbar();
+    }
   </script>
 <input type="file" id="bulkImgInput" accept="image/*" multiple style="display:none;" />
 <input type="file" id="scmFileInput" accept=".xlsx, .xls, .csv, image/*" multiple style="display:none;" />

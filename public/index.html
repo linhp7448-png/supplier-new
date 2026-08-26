@@ -1403,7 +1403,7 @@
     .imtbl td,
     .imtbl th {
       font-size: 11px;
-      padding: 8px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--line2);
       text-align: left
     }
@@ -1412,10 +1412,19 @@
       background: #fff8ef
     }
 
+    .imtbl td.stk { background: #fff; }
+    .imtbl tr:hover td.stk { background: #fff8ef; }
+    .imtbl tr.sel td.stk { background: #eff6ff; }
+
     .imcode {
       font-family: var(--mono);
-      color: var(--blue);
-      font-weight: 650
+      color: #334155;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 10.5px;
+      white-space: nowrap;
     }
 
     .impill {
@@ -3076,8 +3085,8 @@
     function itemImg(item_no, size) {
       size = size || 34;
       var it = ITEMS[item_no]; var url = it ? (it.image_url || it._signed || '') : '';
-      if (url) return '<img src="' + esc(url) + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:cover;border-radius:6px;border:1px solid var(--line)" loading="lazy" onerror="this.style.display=\'none\'">';
-      return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:9px">—</div>';
+      if (url) return '<img src="' + esc(url) + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0" loading="lazy" onerror="this.style.display=\'none\'">';
+      return `<div style="width:${size}px;height:${size}px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;color:#cbd5e1"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg></div>`;
     }
     async function signItemImages() { // với item dùng image_path (storage) → tạo signed URL
       var need = Object.values(ITEMS).filter(function (it) { return it.image_path && !it.image_url; });
@@ -6325,11 +6334,11 @@ function imOverview() {
       // ==== 3 VIEW: Lõi (owner phòng ban) · Mua hàng · Kế toán ====
       var VIEWS = [
         {
-          key: 'owner', label: '🏢 Product Owner', color: '#2b6cb0', bg: '#eaf1fb',
+          key: 'owner', label: 'THÔNG TIN MẶT HÀNG CHÍNH', color: '#1d4ed8', bg: '#eff6ff',
           cols: ['Category', 'Domain', 'Item Code', 'Item Name', 'Functional UOM', 'Allocation', 'Base UOM']
         },
         {
-          key: 'buy', label: '🛒 Mua hàng (Purchasing)', color: '#147a52', bg: '#e8f5ee',
+          key: 'buy', label: 'QUY CÁCH / ĐƠN VỊ CON (SUB ITEM)', color: '#047857', bg: '#ecfdf5',
           cols: ['Sub Item Code', 'Sub Item Name', 'Brand', 'Manufacturer', 'Purchase UOM', 'Conversion', 'Shelf Life', 'Storage', 'GTIN', 'Origin', 'Image Status', 'Vendor', 'Purchase Price', 'Valid From', 'Valid To', 'VAT %']
         },
         {
@@ -6366,10 +6375,30 @@ function imOverview() {
       var groupBands = ''; var run = [];
       vis.forEach(function (c) { run.push(c); });
       // đếm số cột hiện của mỗi view (theo thứ tự vis)
-      var band = '';
-      VIEWS.forEach(function (v) { var n = vis.filter(function (c) { return COLVIEW[c].key === v.key; }).length; if (n > 0) band += '<th colspan="' + n + '" style="background:' + v.bg + ';color:' + v.color + ';text-align:center;font-size:11px;border-bottom:2px solid ' + v.color + '">' + v.label + '</th>'; });
+      var stickyWidths = { 'Category': 100, 'Item Code': 130, 'Item Name': 250 };
+      var currentLeft = 32; // width of checkbox th
+      var stickyLefts = {};
+      var lastSticky = null;
+      vis.forEach(function(c) {
+          if (stickyWidths[c]) {
+              stickyLefts[c] = currentLeft;
+              currentLeft += stickyWidths[c];
+              lastSticky = c;
+          }
+      });
 
-      var th = '<th style="width:30px;text-align:center"><input type="checkbox" onclick="imToggleAll(this.checked)"></th>' + vis.map(function (c) { var ar = (sk === c) ? (sd > 0 ? ' ▲' : ' ▼') : ''; var tip = IML_TIP[c] || c; var vw = COLVIEW[c]; var sg = SYSGEN[c] ? ' <span title="Hệ thống tự sinh — người phụ trách review" style="opacity:.6">⚙</span>' : ''; return '<th onclick="imLSort(\'' + c.replace(/'/g, "") + '\')" class="imlth" title="' + esc(tip) + (SYSGEN[c] ? ' (hệ thống tự sinh, người phụ trách review)' : '') + '" style="cursor:help;white-space:nowrap;background:' + vw.bg + ';color:' + vw.color + ';border-bottom:2px solid ' + vw.color + '">' + esc(c) + ar + sg + '</th>'; }).join('');
+      var band = '';
+      VIEWS.forEach(function (v) { var n = vis.filter(function (c) { return COLVIEW[c].key === v.key; }).length; if (n > 0) band += '<th colspan="' + n + '" style="background:' + v.bg + ';color:' + v.color + ';text-align:center;font-size:11px;border-bottom:1px solid ' + v.color + ';border-right:2px solid #cbd5e1;padding:8px">' + v.label + '</th>'; });
+
+      var th = '<th style="width:32px;min-width:32px;position:sticky;left:0;z-index:3;text-align:center;border-bottom:1px solid #e2e8f0;background:#f8f9fb;border-right:1px solid #e2e8f0"><input type="checkbox" onclick="imToggleAll(this.checked)"></th>' + vis.map(function (c, i) { 
+        var ar = (sk === c) ? (sd > 0 ? ' ▲' : ' ▼') : ''; var tip = IML_TIP[c] || c; var vw = COLVIEW[c]; var sg = SYSGEN[c] ? ' <span title="Hệ thống tự sinh — người phụ trách review" style="opacity:.6">⚙</span>' : ''; 
+        var isStk = stickyWidths[c] ? true : false;
+        var stkSty = isStk ? ';position:sticky;left:' + stickyLefts[c] + 'px;z-index:3;width:' + stickyWidths[c] + 'px;min-width:' + stickyWidths[c] + 'px;max-width:' + stickyWidths[c] + 'px' : '';
+        
+        var thSty = 'cursor:help;white-space:nowrap;background:' + vw.bg + ';color:#334155;border-bottom:1px solid #e2e8f0;font-weight:600' + (vis[i+1] && COLVIEW[c].key !== COLVIEW[vis[i+1]].key ? ';border-right:2px solid #cbd5e1' : (i === vis.length - 1 ? ';border-right:2px solid #cbd5e1' : '')) + (['Conversion', 'Shelf Life', 'Purchase Price', 'VAT %'].includes(c) ? ';text-align:right' : '') + (['Functional UOM', 'Base UOM', 'Purchase UOM'].includes(c) ? ';text-align:center' : ''); 
+        if (c === lastSticky && !thSty.includes('border-right')) stkSty += ';border-right:2px solid #cbd5e1';
+        return '<th onclick="imLSort(\'' + c.replace(/'/g, "") + '\')" class="imlth" title="' + esc(tip) + (SYSGEN[c] ? ' (hệ thống tự sinh, người phụ trách review)' : '') + '" style="' + thSty + stkSty + '">' + esc(c) + ar + sg + '</th>'; 
+      }).join('');
       if (!window.imPageSize) window.imPageSize = 500;
       if (!window.imPage) window.imPage = 1;
       var totalPages = Math.ceil(rows.length / window.imPageSize) || 1;
@@ -6382,18 +6411,25 @@ function imOverview() {
       var body = currentRows.map(function (r) {
         
         var sid = String(r['Sub Item Code']).replace(/'/g, "");
-        return '<tr onclick="imRowDetail(\'' + sid + '\')" style="cursor:pointer" class="' + (window.imSelected[sid] ? 'sel' : '') + '">' + '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" onchange="window.imSelected[\''+sid+'\']=this.checked;imRender()" ' + (window.imSelected[sid] ? 'checked' : '') + '></td>' + vis.map(function (c) {
+        return '<tr onclick="imRowDetail(\'' + sid + '\')" style="cursor:pointer" class="' + (window.imSelected[sid] ? 'sel' : '') + '">' + '<td class="stk" style="text-align:center;position:sticky;left:0;z-index:2;border-right:1px solid #e2e8f0;width:32px;min-width:32px" onclick="event.stopPropagation()"><input type="checkbox" onchange="window.imSelected[\''+sid+'\']=this.checked;imRender()" ' + (window.imSelected[sid] ? 'checked' : '') + '></td>' + vis.map(function (c, i) {
           var v = r[c];
 
+          var isStk = stickyWidths[c] ? true : false;
+          var stkSty = isStk ? ';position:sticky;left:' + stickyLefts[c] + 'px;z-index:2;width:' + stickyWidths[c] + 'px;min-width:' + stickyWidths[c] + 'px;max-width:' + stickyWidths[c] + 'px' : '';
+          var tdClass = isStk ? 'class="stk"' : '';
 
-          if (c === 'Sub Item Code' || c === 'Item Code') return '<td class="imcode">' + esc(v) + '</td>';
-          if (c === 'Status') return '<td>' + imStatus(v) + '</td>';
-          if (c === 'Purchase UOM' || c === 'Base UOM' || c === 'Functional UOM') return '<td>' + (v ? imPill(v) : '—') + '</td>';
-          if (c === 'Sub Item Name' || c === 'Item Name' || c === 'Item Name / Functional Spec') return '<td><b>' + esc(v || '—') + '</b></td>';
-          if (c === 'Purchase Price') return '<td style="text-align:right">' + (v !== '' ? Number(v).toLocaleString('vi-VN') : '—') + '</td>';
-          if (c === 'Valid To') { var vs = r['_valst']; var sty = vs === 'expired' ? 'background:#fdecec;color:#c0392b;font-weight:700' : vs === 'soon' ? 'background:#fdf4e3;color:#b8851f;font-weight:700' : ''; return '<td style="' + sty + '">' + esc(v === '' ? (r['Valid From'] ? 'nay' : '—') : v) + (vs === 'expired' ? ' ⚠' : vs === 'soon' ? ' ⏳' : '') + '</td>'; }
-          return '<td>' + esc(v === '' ? '—' : v) + '</td>';
-
+          var tdSty = (vis[i+1] && COLVIEW[c].key !== COLVIEW[vis[i+1]].key) ? 'border-right:2px solid #cbd5e1' : (i === vis.length - 1 ? 'border-right:2px solid #cbd5e1' : '');
+          if (c === lastSticky && !tdSty.includes('border-right')) stkSty += ';border-right:2px solid #cbd5e1';
+          
+          if (c === 'Sub Item Code' || c === 'Item Code') return '<td ' + tdClass + ' style="' + tdSty + stkSty + '"><span class="imcode">' + esc(v) + '</span></td>';
+          if (c === 'Status') return '<td ' + tdClass + ' style="' + tdSty + stkSty + '">' + imStatus(v) + '</td>';
+          if (c === 'Purchase UOM' || c === 'Base UOM' || c === 'Functional UOM') return '<td ' + tdClass + ' style="text-align:center;' + tdSty + stkSty + '"><div style="display:flex;justify-content:center">' + (v ? imPill(v) : '—') + '</div></td>';
+          if (c === 'Sub Item Name' || c === 'Item Name' || c === 'Item Name / Functional Spec') return '<td ' + tdClass + ' style="' + tdSty + stkSty + '"><b>' + esc(v || '—') + '</b></td>';
+          if (c === 'Purchase Price' || c === 'Conversion' || c === 'Shelf Life' || c === 'VAT %') return '<td ' + tdClass + ' style="text-align:right;' + tdSty + stkSty + '">' + (v !== '' && v != null ? (c === 'VAT %' ? esc(v) : Number(v).toLocaleString('vi-VN')) : '—') + '</td>';
+          if (c === 'Image Status') { var badgeSty = v === 'Available' ? 'background:#f8fafc;color:#475569;border:1px solid #cbd5e1' : (v === 'Missing' ? 'background:#fff1f2;color:#e11d48;border:1px solid #fecdd3' : 'background:#f1f5f9;color:#64748b'); return '<td ' + tdClass + ' style="' + tdSty + stkSty + '">' + (v ? '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:600;' + badgeSty + '">' + esc(v) + '</span>' : '—') + '</td>'; }
+          if (c === 'Vendor') return '<td ' + tdClass + ' style="' + tdSty + stkSty + ';max-width:200px;min-width:180px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(v || '') + '">' + esc(v || '—') + '</div></td>';
+          if (c === 'Valid To') { var vs = r['_valst']; var sty = vs === 'expired' ? 'background:#fdecec;color:#c0392b;font-weight:700;' : vs === 'soon' ? 'background:#fdf4e3;color:#b8851f;font-weight:700;' : ''; return '<td ' + tdClass + ' style="' + sty + tdSty + stkSty + '">' + esc(v === '' || v == null ? (r['Valid From'] ? 'nay' : '—') : v) + (vs === 'expired' ? ' ⚠' : vs === 'soon' ? ' ⏳' : '') + '</td>'; }
+          return '<td ' + tdClass + ' style="' + tdSty + stkSty + '">' + esc(v === '' || v == null ? '—' : v) + '</td>';
 
         }).join('') + '</tr>';
       }).join('');
@@ -7006,15 +7042,15 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       else {
         var isTrimmed = arr.length > 200;
         if (isTrimmed) arr = arr.slice(0, 200);
-        if (isTrimmed) out += '<div style="color:#d97706;font-size:12px;margin-bottom:8px;padding:6px;background:#fef3c7;border-radius:4px">⚠️ Đang hiển thị 200 kết quả đầu tiên. Vui lòng gõ vào ô Tìm kiếm ở góc trên để tìm chính xác mặt hàng.</div>';
-        out += '<table class="mini"><thead><tr><th>Ảnh</th><th>Mã hàng</th><th>Tên</th><th>ĐVT</th><th>Nhóm</th><th>URL ảnh</th></tr></thead><tbody>';
+        if (isTrimmed) out += '<div style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;margin-bottom:12px;padding:10px;font-size:12px;display:flex;align-items:center;gap:8px"><span>⚠️</span><span>Hiển thị tối đa 200 kết quả đầu tiên. Vui lòng sử dụng ô tìm kiếm để lọc chính xác.</span></div>';
+        out += '<table class="mini"><thead><tr><th style="width:50px;text-align:center">Ảnh</th><th>Mã hàng</th><th>Tên</th><th style="text-align:center">ĐVT</th><th>Nhóm</th><th style="text-align:center">URL ảnh</th></tr></thead><tbody>';
         arr.forEach(function (it) {
-          out += '<tr><td>' + itemImg(it.item_no, 40) + '</td>'
-            + '<td><b>' + esc(it.item_no) + '</b></td>'
-            + '<td><input value="' + esc(it.name || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:140px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
-            + '<td><input value="' + esc(it.uom || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:60px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
-            + '<td><input value="' + esc(it.category || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:110px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td>'
-            + '<td><input value="' + esc(it.image_url || '') + '" style="font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;width:250px;background:#f8f9fa;color:#6b7280;cursor:not-allowed" disabled></td></tr>';
+          out += '<tr><td style="text-align:center">' + itemImg(it.item_no, 40) + '</td>'
+            + '<td><span style="background:#f1f5f9;color:#334155;font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px">' + esc(it.item_no) + '</span></td>'
+            + '<td><span style="color:#1e293b;font-weight:500;font-size:13px">' + esc(it.name || '—') + '</span></td>'
+            + '<td style="text-align:center;color:#475569">' + esc(it.uom || '—') + '</td>'
+            + '<td style="color:#64748b">' + esc(it.category || '—') + '</td>'
+            + '<td style="text-align:center">' + (it.image_url ? '<a href="' + esc(it.image_url) + '" target="_blank" style="color:var(--blue);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:4px">🔗 Xem link</a>' : '<span style="color:var(--faint)">—</span>') + '</td></tr>';
         });
         out += '</tbody></table>';
       }

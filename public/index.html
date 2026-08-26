@@ -801,24 +801,28 @@
 
     tbody td {
       padding: 10px 12px;
-      border-bottom: 1px solid var(--line2);
+      border-bottom: 1px solid #f1f5f9;
       font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 320px
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.4;
     }
 
     tbody tr {
-      cursor: pointer
+      cursor: pointer;
+      transition: background-color 0.2s ease;
     }
 
-    tbody tr:hover {
-      background: #fbfaf7
+    tbody tr:hover td {
+      background: #f8fafc;
     }
 
-    tbody tr.sel {
-      background: var(--accent-soft)
+    tbody tr.sel td {
+      background: #eff6ff !important;
+    }
+
+    tbody tr.sel td:first-child {
+      box-shadow: inset 4px 0 0 #2563eb;
     }
 
     .code {
@@ -832,8 +836,12 @@
       display: inline-block;
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px
+      padding: 4px 8px;
+      border-radius: 12px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      text-align: center;
     }
 
     .b-ok {
@@ -2982,7 +2990,10 @@
     function rzCancel() { var r = RZ; RZ = null; $('#rzoverlay').classList.remove('open'); if (r) r.res(null); }
     function toast(m, bad) { const t = $('#toast'); t.textContent = m; t.className = 'toast show' + (bad ? ' bad' : ''); setTimeout(() => t.className = 'toast', bad ? 5200 : 2600); }
     const SBADGE = { Active: 'b-ok', Pending_Review: 'b-warn', Suspended: 'b-warn', Draft: 'b-neutral', Inactive: 'b-neutral', Blacklisted: 'b-bad' };
-    const sBadge = s => `<span class="badge ${SBADGE[s] || 'b-neutral'}">${(s || '').replace('_', ' ')}</span>`;
+    const sBadge = s => {
+      if (s === 'Active') return `<span class="badge" style="background:#ecfdf5;color:#047857;border:1px solid #d1fae5;display:inline-flex;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:#10b981;margin-right:6px"></div>Active</span>`;
+      return `<span class="badge ${SBADGE[s] || 'b-neutral'}">${(s || '').replace('_', ' ')}</span>`;
+    };
     const roles = ['PIC', 'Kế toán', 'Chất lượng', 'Giao hàng', 'Giá', 'Khác'];
     const PTS = ['COD', 'NET7', 'NET15', 'NET30', 'NET45', 'NET60', 'NET90'];
     function fmtDate(d) { if (!d) return '—'; var x = new Date(d); if (isNaN(x)) return esc(d); return ('0' + x.getDate()).slice(-2) + '/' + ('0' + (x.getMonth() + 1)).slice(-2) + '/' + x.getFullYear(); }
@@ -3416,7 +3427,7 @@
 
     function canActivate(v) { return MSTRE.test(v.mst || '') && v.vpg && v.gbp && v.vbp && (v.contacts || []).some(c => c.e) && !!v.acc_confirmed; }
     const fmtVND = n => Number(n || 0).toLocaleString('vi-VN') + ' đ';
-    const fmtShort = n => { n = Number(n || 0); if (n >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' tỷ'; if (n >= 1e6) return Math.round(n / 1e6) + ' tr'; if (n >= 1e3) return Math.round(n / 1e3) + ' k'; return n.toLocaleString('vi-VN'); };
+    const fmtShort = n => { n = Number(n || 0); if (n >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' Tỷ'; if (n >= 1e6) return Math.round(n / 1e6) + ' Tr'; if (n >= 1e3) return Math.round(n / 1e3) + ' K'; return n.toLocaleString('vi-VN') + ' đ'; };
     function capitalRisk(v) { const c = parseFloat(v.charter_capital || 0), p = parseFloat(v.ytd_purchase || 0); return c > 0 && p > 0 && p > c; }
     function fRisk() {
       const el = $('#frisk'); if (!el) return; const c = parseFloat(form.charter_capital || 0), p = parseFloat(form.ytd_purchase || 0);
@@ -3599,23 +3610,40 @@
       };
       const tName = typeMap[type];
       const doc = (v.docs || []).find(d => d.t === tName);
-      if (!doc) return '<span class="badge b-bad" style="background:#fff1f0;color:#cf1322;border:1px solid #ffa39e">No</span>';
+      
+      const wrapper = 'position:relative;height:72px;width:100%;';
+      const badgeWrap = 'position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);display:flex;align-items:center;justify-content:center;';
+      const subWrap = 'position:absolute;top:50%;left:50%;transform:translateX(-50%);margin-top:14px;text-align:center;white-space:nowrap;';
+      
+      if (!doc) return `<div style="${wrapper}"><div style="${badgeWrap}"><span class="badge b-bad" style="background:#fff1f0;color:#cf1322;border:1px solid #ffa39e;min-width:40px;margin:0">No</span></div></div>`;
       
       let info = "Yes";
+      let subText = "";
+      let spacerText = "";
       const m = doc.f.match(/^\[(.*?)\]/);
       if (m && (type === 'iso' || type === 'tcb' || type === 'haccp')) {
-         info = `Yes (${m[1]})`;
+         let inside = m[1].replace(/\s*-?\s*Khai báo tay/, '').trim();
+         if (inside) {
+            subText += `<div style="font-size:11px;color:#555;line-height:1.2">${esc(inside)}</div>`;
+            spacerText += `<div style="padding:0 8px">${esc(inside)}</div>`;
+         }
       }
+      
+      if (!doc.path && doc.f.includes('Khai báo tay')) info += '*';
       
       let badgeClass = "b-ok";
-      let badgeStyle = "background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f";
+      let badgeStyle = "background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f;min-width:40px;margin:0";
       
       if (doc.vt && new Date(doc.vt) < new Date()) {
-         badgeClass = "b-bad";
-         badgeStyle = "background:#fff1f0;color:#cf1322;border:1px solid #ffa39e";
-         info += " (Hết hạn)";
+         badgeClass = "b-warn";
+         badgeStyle = "background:#fff7e6;color:#d46b08;border:1px solid #ffd591;min-width:40px;margin:0";
+         subText += `<div style="font-size:11px;color:#d46b08;margin-top:2px;font-weight:600">(Hết hạn!)</div>`;
+         spacerText += `<div style="padding:0 8px">(Hết hạn!)</div>`;
       }
-      return `<span class="badge ${badgeClass}" style="${badgeStyle}" title="${esc(doc.f)}">${esc(info)}</span>`;
+      
+      const ghost = `<div style="visibility:hidden;height:0;overflow:hidden;white-space:nowrap;display:flex;flex-direction:column;align-items:center;"><span class="badge" style="min-width:40px;padding:0 8px">${esc(info)}</span>${spacerText ? `<div style="font-size:11px">${spacerText}</div>` : ''}</div>`;
+      
+      return `<div style="${wrapper}">${ghost}<div style="${badgeWrap}"><span class="badge ${badgeClass}" style="${badgeStyle}" title="${esc(doc.f)}">${esc(info)}</span></div>${subText ? `<div style="${subWrap}">${subText}</div>` : ''}</div>`;
     }
 
     function docsView() {
@@ -3624,7 +3652,7 @@
         ? '<tr><td colspan="10" style="padding:26px;text-align:center;color:var(--faint)">Không có NCC khớp bộ lọc. <a href="#" onclick="clearFilters();return false" style="color:var(--blue);font-weight:600">Xóa bộ lọc</a></td></tr>'
         : '<tr><td colspan="10" style="padding:26px;text-align:center;color:var(--faint)">Chưa có NCC giao dịch nào.</td></tr>';
       
-      $('#content').innerHTML = `<table><thead><tr><th style="width:30px;text-align:center"><input type="checkbox" onclick="toggleAllVends(this.checked)"></th>${thSort('docs', 'code', 'Mã')}${thSort('docs', 'name', 'Tên nhà cung cấp')}${thSort('docs', 'mst', 'MST')}<th>Giấy phép KD</th><th>VSATTP</th><th>ISO</th><th>HACCP</th><th>Hồ sơ TCB</th><th>Others</th></tr></thead><tbody>${rows.map(v => `<tr data-id="${v.id}" class="${st.selId === v.id ? 'sel' : ''}"><td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="vchk" value="${v.id}" onchange="chkVend()"></td><td class="code">${v.code}</td><td title="${esc(v.name)}">${esc(v.name)}</td><td class="mono" style="font-size:12px">${v.mst}</td><td>${docStatus(v, 'gpkd')}</td><td>${docStatus(v, 'vsattp')}</td><td>${docStatus(v, 'iso')}</td><td>${docStatus(v, 'haccp')}</td><td>${docStatus(v, 'tcb')}</td><td><span style="color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">...</span></td></tr>`).join('') || empty}</tbody></table>`;
+      $('#content').innerHTML = `<table><thead><tr><th style="width:30px;text-align:center"><input type="checkbox" onclick="toggleAllVends(this.checked)"></th>${thSort('docs', 'code', 'Mã')}${thSort('docs', 'name', 'Tên nhà cung cấp')}${thSort('docs', 'mst', 'MST')}<th style="text-align:center">Giấy phép KD</th><th style="text-align:center">VSATTP</th><th style="text-align:center">ISO</th><th style="text-align:center">HACCP</th><th style="text-align:center">Hồ sơ TCB</th><th style="text-align:center">Others</th></tr></thead><tbody>${rows.map(v => `<tr data-id="${v.id}" class="${st.selId === v.id ? 'sel' : ''}"><td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="vchk" value="${v.id}" onchange="chkVend()"></td><td style="white-space:nowrap;min-width:110px"><span style="font-family:var(--mono);font-size:12px;color:#475569;background:#f1f5f9;padding:2px 6px;border-radius:4px">${v.code}</span></td><td style="max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:#0f172a" title="${esc(v.name)}">${esc(v.name)}</td><td class="mono" style="font-size:12px;white-space:nowrap;min-width:110px">${v.mst}</td><td style="text-align:center">${docStatus(v, 'gpkd')}</td><td style="text-align:center">${docStatus(v, 'vsattp')}</td><td style="text-align:center">${docStatus(v, 'iso')}</td><td style="text-align:center">${docStatus(v, 'haccp')}</td><td style="text-align:center">${docStatus(v, 'tcb')}</td><td style="text-align:center"><div style="display:flex;justify-content:center;align-items:center;height:72px"><span style="color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">...</span></div></td></tr>`).join('') || empty}</tbody></table>`;
       
       $('#content').querySelectorAll('tr[data-id]').forEach(tr => { tr.onclick = () => { st.selId = tr.dataset.id; render(); }; tr.ondblclick = () => openEdit(); });
       const c = $('#cnt'); if (c) { var _sa = DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized').length; c.textContent = rows.length + ' / ' + _sa + ' NCC giao dịch'; }
@@ -3636,7 +3664,7 @@
       const empty = st.q || st.fstatus || st.fcat || st.fseg
         ? '<tr><td colspan="11" style="padding:26px;text-align:center;color:var(--faint)">Không có NCC khớp bộ lọc. <a href="#" onclick="clearFilters();return false" style="color:var(--blue);font-weight:600">Xóa bộ lọc</a></td></tr>'
         : '<tr><td colspan="11" style="padding:26px;text-align:center;color:var(--faint)">Chưa có NCC giao dịch (Spend Authorized) nào. NCC đang sourcing nằm ở màn <b>Data bank</b>; bấm <b>+ Tạo mới</b> để thêm NCC giao dịch trực tiếp.</td></tr>';
-      $('#content').innerHTML = `<table><thead><tr><th style="width:30px;text-align:center"><input type="checkbox" onclick="toggleAllVends(this.checked)"></th>${thSort('vendors', 'code', 'Mã')}${thSort('vendors', 'name', 'Tên nhà cung cấp')}${thSort('vendors', 'mst', 'MST')}${thSort('vendors', 'cat', 'Nhóm')}${thSort('vendors', 'segment', 'Phân khúc')}${thSort('vendors', 'risk', 'Rủi ro')}${thSort('vendors', 'age', 'Tuổi DN')}${thSort('vendors', 'capital', 'Vốn ĐL', 'right')}${thSort('vendors', 'ytd', 'Mua YTD', 'right')}${thSort('vendors', 'status', 'Trạng thái')}</tr></thead><tbody>${rows.map(v => `<tr data-id="${v.id}" class="${st.selId === v.id ? 'sel' : ''}"><td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="vchk" value="${v.id}" onchange="chkVend()"></td><td class="code">${v.code}</td><td title="${esc(v.name)}">${esc(v.name)}</td><td class="mono" style="font-size:12px">${v.mst}</td><td>${v.cat}</td><td>${v.segment ? '<span class="badge ' + (segB[v.segment] || 'b-neutral') + '">' + esc(v.segment) + '</span>' : '<span style="color:var(--faint)">-</span>'}</td><td>${isRisk(v.mst) ? '<span class="risk-flag">🚩 Nợ thuế</span>' : (mstStatBad(v.mst_status) ? '<span class="risk-flag">⛔ Ngừng HĐ</span>' : (capitalRisk(v) ? '<span class="risk-flag">⚠️ Vượt vốn</span>' : '<span style="color:var(--ok)">✓</span>'))}</td><td>${ageCell(v)}</td><td class="mono" style="text-align:right;font-size:12px">${Number(v.charter_capital) > 0 ? ('<span style="' + (capitalRisk(v) ? 'color:var(--bad);font-weight:600' : '') + '" title="Vốn điều lệ' + (capitalRisk(v) ? ' - YTD đã vượt vốn' : '') + '">' + fmtShort(v.charter_capital) + '</span>') : '<span style="color:var(--faint)">-</span>'}</td><td class="mono" style="text-align:right;font-size:12px">${Number(v.ytd_purchase) > 0 ? fmtShort(v.ytd_purchase) : '<span style="color:var(--faint)">-</span>'}</td><td>${sBadge(v.status)}</td></tr>`).join('')
+      $('#content').innerHTML = `<table><thead><tr><th style="width:30px;text-align:center"><input type="checkbox" onclick="toggleAllVends(this.checked)"></th>${thSort('vendors', 'code', 'Mã')}${thSort('vendors', 'name', 'Tên nhà cung cấp')}${thSort('vendors', 'mst', 'MST')}${thSort('vendors', 'cat', 'Nhóm')}${thSort('vendors', 'segment', 'Phân khúc', 'center')}${thSort('vendors', 'risk', 'Rủi ro', 'center')}${thSort('vendors', 'age', 'Tuổi DN', 'center')}${thSort('vendors', 'capital', 'Vốn ĐL', 'right')}${thSort('vendors', 'ytd', 'Mua YTD', 'right')}${thSort('vendors', 'status', 'Trạng thái', 'center')}</tr></thead><tbody>${rows.map(v => `<tr data-id="${v.id}" class="${st.selId === v.id ? 'sel' : ''}"><td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="vchk" value="${v.id}" onchange="chkVend()"></td><td style="white-space:nowrap;min-width:110px"><span style="font-family:var(--mono);font-size:12px;color:#475569;background:#f1f5f9;padding:2px 6px;border-radius:4px">${v.code}</span></td><td style="max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:#0f172a" title="${esc(v.name)}">${esc(v.name)}</td><td class="mono" style="font-size:12px;white-space:nowrap;min-width:110px">${v.mst}</td><td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(v.cat || '')}">${v.cat || '<span style="color:var(--faint)">—</span>'}</td><td style="text-align:center">${(v.segment && !['-','—'].includes(v.segment.trim())) ? '<span class="badge ' + (segB[v.segment] || 'b-neutral') + '">' + esc(v.segment) + '</span>' : '<span style="color:var(--faint)">—</span>'}</td><td style="text-align:center">${isRisk(v.mst) ? '<span class="risk-flag">🚩 Nợ thuế</span>' : (mstStatBad(v.mst_status) ? '<span class="risk-flag">⛔ Ngừng HĐ</span>' : (capitalRisk(v) ? '<span class="risk-flag">⚠️ Vượt vốn</span>' : '<span style="color:var(--ok)">✓</span>'))}</td><td style="text-align:center">${ageCell(v)}</td><td class="mono" style="text-align:right !important;padding-right:16px;font-size:12px">${Number(v.charter_capital) > 0 ? ('<span style="' + (capitalRisk(v) ? 'color:var(--bad);font-weight:600' : '') + '" title="Vốn điều lệ' + (capitalRisk(v) ? ' - YTD đã vượt vốn' : '') + '">' + fmtShort(v.charter_capital) + '</span>') : '<span style="color:var(--faint)">—</span>'}</td><td class="mono" style="text-align:right !important;padding-right:16px;font-size:12px">${Number(v.ytd_purchase) > 0 ? fmtShort(v.ytd_purchase) : '<span style="color:var(--faint)">—</span>'}</td><td style="text-align:center">${sBadge(v.status)}</td></tr>`).join('')
         || empty}</tbody></table>`;
       $('#content').querySelectorAll('tr[data-id]').forEach(tr => { tr.onclick = () => { st.selId = tr.dataset.id; render(); }; tr.ondblclick = () => openEdit(); });
       const c = $('#cnt'); if (c) { var _sa = DB.filter(v => (v.relationship || 'Spend_Authorized') === 'Spend_Authorized').length; c.textContent = rows.length + ' / ' + _sa + ' NCC giao dịch'; }
@@ -3666,7 +3694,8 @@
     var TH_TIP = { 'Vốn ĐL': 'Vốn điều lệ (VND)', 'Mua YTD': 'Tổng mua hàng lũy kế từ đầu năm (Year-To-Date)', 'Tuổi DN': 'Tuổi doanh nghiệp — tính từ ngày cấp GPKD lần đầu', 'MST': 'Mã số thuế', 'Rủi ro': 'Cờ rủi ro: nợ thuế / ngừng hoạt động / YTD vượt vốn điều lệ' };
     function thSort(tbl, key, label, align) {
       var s = SORT[tbl]; var on = s.k === key; var ar = on ? (s.d > 0 ? '▲' : '▼') : '▲'; var tip = TH_TIP[label] ? ' title="' + TH_TIP[label] + ' (bấm để sắp xếp)"' : ' title="Bấm để sắp xếp"';
-      return '<th class="srt' + (on ? ' on' : '') + '"' + (align ? ' style="text-align:' + align + '"' : '') + tip + ' onclick="toggleSort(\'' + tbl + '\',\'' + key + '\')">' + label + '<span class="ar">' + ar + '</span></th>';
+      var style = align ? ` style="text-align:${align} !important;${align === 'right' ? ' padding-right:16px;' : ''}"` : '';
+      return '<th class="srt' + (on ? ' on' : '') + '"' + style + tip + ' onclick="toggleSort(\'' + tbl + '\',\'' + key + '\')">' + label + '<span class="ar">' + ar + '</span></th>';
     }
     function riskView() {
       $('#content').innerHTML = `<div class="import">
@@ -4268,7 +4297,8 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     function docRows() { return (form.docs || []).map(d => { const dd = daysTo(d.vt), exp = dd !== null && dd < 0, soon = dd !== null && dd >= 0 && dd <= 60; return `<tr><td>${esc(d.t)}</td><td>${d.path ? `<a href="#" onclick="viewDoc('${esc(d.path)}');return false" style="color:var(--blue);font-weight:600;text-decoration:none">${esc(d.f)} ↗</a>` : esc(d.f) + ' <span style="color:var(--faint);font-size:10px">(chưa có tệp)</span>'}</td><td>${esc(d.issue_date || '—')}</td><td style="${exp ? "color:var(--bad);font-weight:600" : (soon ? "color:var(--warn);font-weight:600" : "")}">${d.vt ? esc(d.vt) + (exp ? " (quá hạn)" : (soon ? " (sắp hết)" : "")) : "—"}</td><td>${d.is_auto_renew ? 'Có' : 'Không'}</td><td>${esc(d.doc_status || '—')}</td><td>${esc(d.pic_email || '—')}</td><td><button class="xbtn" onclick="rmDoc('${d.id}','${esc(d.path)}')">✕</button></td></tr>` }).join('') || '<tr><td colspan="8" style="color:var(--faint)">Chưa có hồ sơ.</td></tr>'; }
     async function viewDoc(path) { const { data, error } = await sb.storage.from('vendor-docs').createSignedUrl(path, 3600); if (error) return toast('Lỗi mở tệp: ' + error.message, 1); window.open(data.signedUrl, '_blank'); }
     async function uploadPendingDoc(vid) {
-      const fi = $('#dfile'); if (!fi || !fi.files.length) return { done: false };
+      const fi = $('#dfile');
+      var hasFile = fi && fi.files.length > 0;
       var t = ($('#dtype') && $('#dtype').value) || 'Khác';
       if (t === 'Khác') { var _dto = ($('#dtypeOther') && $('#dtypeOther').value.trim()) || ''; if (!_dto) return { done: false, err: 'Loại hồ sơ chọn "Khác" — ghi rõ loại hồ sơ trước' }; t = _dto; }
 
@@ -4281,14 +4311,25 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       if (!dvalid) return { done: false, err: 'Vui lòng nhập Ngày hết hạn.' };
       if (!dpic) return { done: false, err: 'Vui lòng nhập Email/Tên PIC phụ trách.' };
 
-      const file = fi.files[0];
-      let fname = file.name;
+      let fname = 'Khai báo tay';
       if (['Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP'].includes(t)) {
          var dext = $('#dext') && $('#dext').value.trim();
-         if (dext) fname = `[${dext}] ${fname}`;
+         if (dext) fname = `[${dext}] Khai báo tay`;
       }
-      const path = vid + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_');
-      const { error: ue } = await sb.storage.from('vendor-docs').upload(path, file); if (ue) return { done: false, err: 'Lỗi tải tệp: ' + ue.message };
+      let path = null;
+      let returnedName = 'Khai báo tay';
+
+      if (hasFile) {
+        const file = fi.files[0];
+        fname = file.name;
+        if (['Chứng nhận ISO', 'Hồ sơ TCB', 'HACCP'].includes(t)) {
+           var dext = $('#dext') && $('#dext').value.trim();
+           if (dext) fname = `[${dext}] ${fname}`;
+        }
+        path = vid + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_');
+        const { error: ue } = await sb.storage.from('vendor-docs').upload(path, file); if (ue) return { done: false, err: 'Lỗi tải tệp: ' + ue.message };
+        returnedName = file.name;
+      }
 
       const { data: existingDocs } = await sb.from('vendor_document').select('id, storage_path').eq('vendor_id', vid).eq('doc_type', t).eq('file_name', fname);
       let existDoc = existingDocs && existingDocs.length > 0 ? existingDocs[0] : null;
@@ -4297,7 +4338,7 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       if (existDoc) {
         const { error: ue2 } = await sb.from('vendor_document').update(payload).eq('id', existDoc.id);
         if (ue2) return { done: false, err: 'Lỗi cập nhật hồ sơ: ' + ue2.message };
-        if (existDoc.storage_path) await sb.storage.from('vendor-docs').remove([existDoc.storage_path]);
+        if (existDoc.storage_path && existDoc.storage_path !== path) await sb.storage.from('vendor-docs').remove([existDoc.storage_path]);
       } else {
         const { error: ie } = await sb.from('vendor_document').insert(payload);
         if (ie) return { done: false, err: 'Lỗi lưu hồ sơ: ' + ie.message };
@@ -4305,13 +4346,13 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
 
       if ($('#dfile')) $('#dfile').value = ''; if ($('#dvalid')) $('#dvalid').value = ''; if ($('#dextract')) $('#dextract').textContent = '';
       if ($('#dissue')) $('#dissue').value = ''; if ($('#drenew')) $('#drenew').checked = false; if ($('#dpic')) $('#dpic').value = '';
-      return { done: true, name: file.name, isUpdate: !!existDoc };
+      return { done: true, name: returnedName, isUpdate: !!existDoc };
     }
     async function uploadDoc() {
       if (!form || !form.id) return toast('Lưu NCC trước rồi mở lại để đính kèm hồ sơ', 1);
       const r = await uploadPendingDoc(form.id);
       if (r.err) return toast(r.err, 1);
-      if (!r.done) return toast('Chọn tệp', 1);
+      if (!r.done) return;
       toast(r.isUpdate ? 'Đã cập nhật đè lên hồ sơ cũ' : 'Đã thêm hồ sơ'); await loadAll(); form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); $('#docbody').innerHTML = docRows();
     }
     async function rmDoc(id, path) { if (!confirm('Xóa hồ sơ?')) return; await sb.from('vendor_document').delete().eq('id', id); if (path) await sb.storage.from('vendor-docs').remove([path]); toast('Đã xóa hồ sơ'); await loadAll(); form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); $('#docbody').innerHTML = docRows(); }

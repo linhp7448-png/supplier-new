@@ -89,11 +89,21 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 30px 30px 26px;
-      width: 340px;
+      width: 100%;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      box-shadow: 0 12px 40px rgba(20, 30, 45, .08)
+      box-shadow: 0 12px 40px rgba(20, 30, 45, .08);
+    }
+
+    #login label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: -6px;
+      margin-top: 4px;
     }
 
     #login h1 {
@@ -108,10 +118,13 @@
     }
 
     #login input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
       font: inherit;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border: 1px solid var(--line);
-      border-radius: 8px
+      border-radius: 8px;
     }
 
     .err {
@@ -2799,24 +2812,34 @@
     <div class="box" id="loginBox">
       <h1>Supplier Management</h1>
       <p>G-ERP · Galaxy Cinema</p>
-      <input id="le" type="email" placeholder="Email" autocomplete="username" value="sonbn@galaxystudio.vn">
-      <input id="lp" type="password" placeholder="Mật khẩu" autocomplete="current-password" value="12345678">
-      <button class="btn pri" onclick="doLogin()">Đăng nhập</button>
+      <label>Email *</label>
+      <input id="le" type="email" placeholder="example@company.com" autocomplete="username" value="sonbn@galaxystudio.vn">
+      <label>Mật khẩu *</label>
+      <input id="lp" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="current-password" value="12345678">
+      <button class="btn pri" style="width:100%;display:block;margin-top:4px" onclick="doLogin()">Đăng nhập</button>
       <div style="margin-top:12px;text-align:center;font-size:13px">
         Chưa có tài khoản? <a href="#" style="color:#2b6cb0;text-decoration:none;font-weight:600" onclick="$('#loginBox').style.display='none'; $('#regBox').style.display='block'; $('#rerr').textContent=''; $('#rsucc').style.display='none';">Đăng ký đối tác mới</a>
       </div>
       <div class="err" id="lerr"></div>
-      <div style="margin-top:10px;font-size:11px;color:#aaa;text-align:center">Tài khoản: <b style="color:#ddd">sonbn@galaxystudio.vn</b> / Mật khẩu: <b style="color:#ddd">12345678</b></div>
+      <div style="margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:12px;color:#64748b;margin-bottom:6px">Tài khoản Demo</div>
+        <div style="font-size:13px;color:#334155;font-weight:500;margin-bottom:10px">sonbn@galaxystudio.vn / 12345678</div>
+        <button class="btn" style="padding:4px 10px;font-size:11px;background:#fff;border:1px solid #cbd5e1;border-radius:6px" onclick="$('#le').value='sonbn@galaxystudio.vn'; $('#lp').value='12345678';">Điền nhanh tài khoản demo</button>
+      </div>
     </div>
 
     <div class="box" id="regBox" style="display:none">
       <h1 style="color:#2b6cb0">Đăng ký Đối Tác</h1>
       <p>Hệ thống Supplier Portal</p>
-      <input id="re" type="email" placeholder="Email (dùng để đăng nhập)">
-      <input id="rp" type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)">
-      <input id="rc" type="text" placeholder="Tên Công Ty / Tổ Chức">
-      <input id="rt" type="text" placeholder="Mã số thuế (nếu có)">
-      <button class="btn pri" id="btnReg" onclick="doRegister()">Gửi yêu cầu Đăng ký</button>
+      <label>Email *</label>
+      <input id="re" type="email" placeholder="example@company.com">
+      <label>Mật khẩu *</label>
+      <input id="rp" type="password" placeholder="Tối thiểu 6 ký tự">
+      <label>Tên Công Ty / Tổ Chức *</label>
+      <input id="rc" type="text" placeholder="Nhập tên công ty">
+      <label>Mã số thuế (nếu có)</label>
+      <input id="rt" type="text" placeholder="VD: 0101234567">
+      <button class="btn pri" id="btnReg" style="width:100%;display:block;margin-top:4px" onclick="doRegister()">Gửi yêu cầu Đăng ký</button>
       <div style="margin-top:12px;text-align:center;font-size:13px">
         Đã có tài khoản? <a href="#" style="color:#666;text-decoration:underline" onclick="$('#regBox').style.display='none'; $('#loginBox').style.display='block';">Quay lại Đăng nhập</a>
       </div>
@@ -5109,9 +5132,14 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
     </div>
   `;
 
-      var banner = '<div style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:9px;padding:12px 16px;margin:0 12px 12px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="color:var(--text);font-size:13px"><b>📧 THÔNG BÁO TỰ ĐỘNG (EMAIL CRON):</b> Hệ thống tự động quét mỗi ngày và phát email nhắc nhở trước 60 ngày đến nhân viên PIC. Phát hiện <b style="color:var(--bad)">' + (items_tab1.length + items_tab2.length) + '</b> hồ sơ/chứng từ sắp/đã quá hạn. ' + missingBadge + '</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbtn pri" style="background:var(--accent);color:#fff;font-weight:600" onclick="sendAllPICNotifications()">📧 Gửi mail đôn đốc PIC ngay</button><button class="tbtn" onclick="notifyPICsModal()">📋 Xem danh sách & Gửi</button><button class="tbtn" onclick="triggerExcelImport()">📥 Import Excel</button><button class="tbtn" style="background:var(--bad);color:#fff;font-weight:600" onclick="wipeAllData()">🧹 Xóa Toàn Bộ</button></div></div>';
+      var banner = '<div style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:9px;padding:12px 16px;margin:0 12px 12px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="color:var(--text);font-size:13px"><b>📧 THÔNG BÁO TỰ ĐỘNG (EMAIL CRON):</b> Hệ thống tự động quét mỗi ngày và phát email nhắc nhở trước 60 ngày đến nhân viên PIC. Phát hiện <b style="color:var(--bad)">' + (items_tab1.length + items_tab2.length) + '</b> hồ sơ/chứng từ sắp/đã quá hạn. ' + missingBadge + '</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbtn pri" style="background:var(--accent);color:#fff;font-weight:600" onclick="sendAllPICNotifications()">📧 Gửi mail đôn đốc PIC ngay</button><button class="tbtn" style="background:#fff;border:1px solid #cbd5e1" onclick="notifyPICsModal()">📋 Xem danh sách & Gửi</button><button class="tbtn" style="background:#fff;border:1px solid #cbd5e1" onclick="triggerExcelImport()">📥 Import Excel</button><button class="tbtn" style="background:transparent;border:1px solid #e2e8f0;color:#e11d48;font-weight:600" onmouseover="this.style.background=\'#fff1f2\'" onmouseout="this.style.background=\'transparent\'" onclick="if(confirm(\'Cảnh báo: Hành động này sẽ xóa toàn bộ dữ liệu hiện tại.\\nBạn có chắc chắn muốn Xóa Toàn Bộ không?\')) { if(confirm(\'Bạn ĐANG XÓA TOÀN BỘ dữ liệu. Hành động này không thể hoàn tác.\\nXác nhận xóa lần 2?\')) wipeAllData(); }">🧹 Xóa Toàn Bộ</button></div></div>';
 
-      var tableHtml = '<table><thead><tr><th>Mã</th><th>Nhà cung cấp</th><th>Thông tin hồ sơ</th><th>PIC phụ trách</th><th>Trạng thái Mail</th><th>Hết hạn</th><th>Còn lại</th><th>Hành động</th></tr></thead><tbody>' + (activeItems.map(it => '<tr data-id="' + it.v.id + '"><td class="code">' + it.v.code + '</td><td>' + esc(it.v.name) + '</td><td>' + it.what + '</td><td><b>' + esc(it.pic) + '</b></td><td>' + (it.email ? `<span class="badge b-ok" title="${esc(it.email)}">📧 Đã có Mail</span>` : `<span class="badge b-bad">⚠️ CHƯA CÓ EMAIL</span>`) + '</td><td>' + it.due + '</td><td style="' + (it.days < 0 ? 'color:var(--bad);font-weight:600' : 'color:var(--warn);font-weight:600') + '">' + (it.days < 0 ? ('Quá ' + (-it.days) + ' ngày') : (it.days + ' ngày')) + '</td><td><button class="tbtn" onclick="st.selId=&quot;' + it.v.id + '&quot;;openEdit();event.stopPropagation()">Sửa</button></td></tr>').join('') || '<tr><td colspan=8 style="padding:24px;text-align:center;color:var(--faint)">Không có hồ sơ trong mục này.</td></tr>') + '</tbody></table>';
+      var tableHtml = '<table><thead><tr><th>Mã</th><th>Nhà cung cấp</th><th>Thông tin hồ sơ</th><th>PIC phụ trách</th><th>Trạng thái Mail</th><th style="white-space:nowrap">Hết hạn</th><th style="white-space:nowrap">Còn lại</th><th>Hành động</th></tr></thead><tbody>' + (activeItems.map(it => {
+        var isEmailFallback = (it.pic && it.pic.includes('@'));
+        var picHtml = isEmailFallback ? '<span style="font-size:12px;color:#64748b">' + esc(it.pic) + '</span>' : '<b>' + esc(it.pic) + '</b>';
+        var daysHtml = it.days < 0 ? '<span style="color:#e11d48;font-weight:600">Quá ' + (-it.days) + ' ngày</span>' : (it.days <= 60 ? '<span style="color:#d97706;font-weight:600">' + it.days + ' ngày</span>' : '<span style="color:#475569">' + it.days + ' ngày</span>');
+        return '<tr data-id="' + it.v.id + '"><td style="white-space:nowrap"><span style="font-family:var(--mono);font-size:12px;background:#f1f5f9;color:#334155;padding:2px 8px;border-radius:4px">' + it.v.code + '</span></td><td>' + esc(it.v.name) + '</td><td>' + it.what + '</td><td>' + picHtml + '</td><td>' + (it.email ? `<span class="badge b-ok" title="${esc(it.email)}">📧 Đã có Mail</span>` : `<span class="badge b-bad">⚠️ CHƯA CÓ EMAIL</span>`) + '</td><td style="white-space:nowrap">' + it.due + '</td><td style="white-space:nowrap">' + daysHtml + '</td><td><button class="tbtn" onclick="st.selId=&quot;' + it.v.id + '&quot;;openEdit();event.stopPropagation()">Sửa</button></td></tr>'
+      }).join('') || '<tr><td colspan=8 style="padding:24px;text-align:center;color:var(--faint)">Không có hồ sơ trong mục này.</td></tr>') + '</tbody></table>';
 
       $('#content').innerHTML = tabsHtml + banner + tableHtml;
       $('#content').querySelectorAll('tr[data-id]').forEach(tr => { tr.onclick = () => { st.selId = tr.dataset.id; openEdit(); }; });
@@ -7130,14 +7158,14 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
     async function usersView() {
       if (MYROLE !== 'Admin') { toast('Chỉ Admin được vào Quản trị người dùng', 1); st.view = 'vendors'; navSetActive('vendors'); return render(); }
       $('#content').innerHTML = '<div class="import"><div style="font-weight:650;margin-bottom:4px">Người dùng & phân quyền</div>'
-        + '<div style="color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.5"><b>Buyer</b>: tạo/nhập liệu · <b>Approver</b>: duyệt NCC · <b>Accounting</b>: xác nhận hạch toán + duyệt đổi TK ngân hàng · <b>Viewer</b>: chỉ xem · <b>Admin</b>: toàn quyền. Tài khoản chưa gán vai trò = Buyer (khi đã có ít nhất 1 người được gán).</div>'
-        + '<div style="margin-bottom:16px"><button class="btn" style="border:1px solid #1890ff;color:#1890ff;font-weight:600" onclick="showVendorApprovals()">+ Duyệt yêu cầu Đăng ký Đối tác (NCC)</button></div>'
+        + '<div style="background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;font-size:12px;padding:12px;border-radius:8px;margin-bottom:16px;line-height:1.5"><b>Buyer</b>: tạo/nhập liệu · <b>Approver</b>: duyệt NCC · <b>Accounting</b>: xác nhận hạch toán + duyệt đổi TK ngân hàng · <b>Viewer</b>: chỉ xem · <b>Admin</b>: toàn quyền. Tài khoản chưa gán vai trò = Buyer (khi đã có ít nhất 1 người được gán).</div>'
+        + '<div style="margin-bottom:16px"><button class="btn" style="border:1px solid #2563eb;color:#2563eb;font-weight:600" onclick="showVendorApprovals()">+ Duyệt yêu cầu Đăng ký Đối tác (NCC) <span id="btnPendingBadge" style="display:none;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;margin-left:6px"></span></button></div>'
         + '<div id="ulist" style="color:var(--muted)">Đang tải…</div>'
         + '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px"><div style="font-weight:650;margin-bottom:8px">Tạo tài khoản mới</div>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="ue" placeholder="Email" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;width:230px">'
         + '<input id="up" type="password" placeholder="Mật khẩu (≥6 ký tự)" style="font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;width:180px">'
         + '<select id="ur" class="f"><option>Buyer</option><option>Approver</option><option>Accounting</option><option>Viewer</option><option>Admin</option></select>'
-        + '<button class="btn pri" id="uaddbtn" onclick="uAdd()">+ Tạo tài khoản</button></div>'
+        + '<button class="btn" id="uaddbtn" style="background:#2563eb;color:#fff;border:none;font-weight:600" onclick="uAdd()">+ Tạo tài khoản</button></div>'
         + '<div style="color:var(--muted);font-size:11px;margin-top:8px">Người được tạo đăng nhập ngay bằng email + mật khẩu này, vai trò gán luôn khi tạo. Đổi vai trò về sau: chọn trực tiếp trong cột Vai trò ở bảng trên.</div></div></div>';
       try {
         const { data, error } = await sb.functions.invoke('admin-users', { body: { action: 'list' } });
@@ -7149,10 +7177,12 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
           var cur = ROLES[em] || ''; var opts = ['', 'Buyer', 'Approver', 'Accounting', 'Viewer', 'Admin'];
           return '<select class="f" style="min-width:130px" onchange="uRole(\'' + em + '\',this.value,this,\'' + uid + '\')">' + opts.map(function (o) { return '<option value="' + o + '" ' + (cur === o ? 'selected' : '') + '>' + (o || '— chưa gán') + '</option>'; }).join('') + '</select>';
         };
-        $('#ulist').innerHTML = '<table class="mini"><thead><tr><th>Email</th><th>Vai trò</th><th>Tạo lúc</th><th>Đăng nhập gần nhất</th><th></th></tr></thead><tbody>'
+        $('#ulist').innerHTML = '<table class="mini"><thead><tr><th>Email</th><th>Vai trò</th><th>Tạo lúc</th><th>Đăng nhập gần nhất</th><th>THAO TÁC</th></tr></thead><tbody>'
           + us.map(function (x) {
             var em = (x.email || '').toLowerCase(); var isSup = supEmails.has(em);
-            return '<tr><td>' + esc(x.email) + (em === (me.email || '').toLowerCase() ? ' <span style="color:var(--faint);font-size:10px">(bạn)</span>' : '') + '</td><td>' + (isSup ? '<span class="badge b-neutral" title="Tài khoản cổng NCC — không áp vai trò nội bộ">Cổng NCC</span>' : roleSel(em, x.id)) + '</td><td>' + (x.created_at ? new Date(x.created_at).toLocaleDateString('vi-VN') : '') + '</td><td>' + (x.last_sign_in_at ? new Date(x.last_sign_in_at).toLocaleString('vi-VN') : '—') + '</td><td style="white-space:nowrap"><button class="btn" style="padding:4px 8px" onclick="uReset(\'' + x.id + '\')">Đổi MK</button> <button class="xbtn" onclick="uDel(\'' + x.id + '\',\'' + esc(x.email) + '\')">✕</button></td></tr>';
+            var dt = x.last_sign_in_at ? new Date(x.last_sign_in_at) : null;
+            var dts = dt ? dt.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' + dt.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : '—';
+            return '<tr><td>' + esc(x.email) + (em === (me.email || '').toLowerCase() ? ' <span style="color:var(--faint);font-size:10px">(bạn)</span>' : '') + '</td><td>' + (isSup ? '<span class="badge b-neutral" title="Tài khoản cổng NCC — không áp vai trò nội bộ">Cổng NCC</span>' : roleSel(em, x.id)) + '</td><td>' + (x.created_at ? new Date(x.created_at).toLocaleDateString('vi-VN') : '') + '</td><td>' + dts + '</td><td style="white-space:nowrap"><button class="btn" style="padding:4px 8px" onclick="uReset(\'' + x.id + '\')" title="Đổi mật khẩu">🔑</button> <button class="btn" style="padding:4px 8px;color:#ef4444" onmouseover="this.style.background=\'#fef2f2\'" onmouseout="this.style.background=\'transparent\'" onclick="uDel(\'' + x.id + '\',\'' + esc(x.email) + '\')" title="Xóa tài khoản">🗑️</button></td></tr>';
           }).join('')
           + '</tbody></table><div style="color:var(--muted);font-size:12px;margin-top:6px">' + us.length + ' tài khoản</div>';
       } catch (e) { $('#ulist').innerHTML = '<div style="color:var(--bad)">Lỗi: ' + esc(e.message) + '</div>'; }
@@ -7174,12 +7204,14 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
     
     async function showVendorApprovals() {
       if (MYROLE !== 'Admin') return toast('Chỉ Admin mới có quyền duyệt', 1);
+      window.vaTab = 'Pending';
       const box = document.createElement('div');
       box.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
       box.className = 'overlay-approvals';
       box.innerHTML = '<div style="background:#fff;padding:24px;border-radius:12px;width:800px;max-width:95%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2);position:relative">'
         + '<button onclick="this.closest(\'.overlay-approvals\').remove()" style="position:absolute;top:16px;right:16px;border:none;background:transparent;font-size:20px;cursor:pointer;color:#999">&times;</button>'
-        + '<h3 style="margin-top:0;color:#2b6cb0">Danh sách chờ duyệt Đăng ký Đối tác</h3>'
+        + '<h3 style="margin-top:0;color:#2b6cb0;margin-bottom:16px">Duyệt Đăng ký Đối tác</h3>'
+        + '<div id="vaTabs" style="display:flex;gap:16px;border-bottom:1px solid #e2e8f0;margin-bottom:16px"></div>'
         + '<div id="apprList">Đang tải...</div>'
         + '</div>';
       document.body.appendChild(box);
@@ -7191,34 +7223,44 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
       try {
         const { data, error } = await sb.from('vendor_registrations').select('*').order('created_at', { ascending: false });
         if (error) { p.innerHTML = 'Lỗi tải danh sách: ' + error.message; return; }
-        if (!data || !data.length) { 
-           p.innerHTML = '<div style="padding:20px;text-align:center;color:#666">Chưa có yêu cầu nào.</div>'; 
-           const b = $('#pendingBadge'); if(b) b.style.display='none';
+        const pc = data ? data.filter(r => r.status === 'Pending').length : 0;
+        const ac = data ? data.filter(r => r.status === 'Approved').length : 0;
+        const rc = data ? data.filter(r => r.status === 'Rejected').length : 0;
+        
+        const b = $('#btnPendingBadge'); if(b) { if(pc>0) {b.innerHTML='&bull; ' + pc; b.style.display='inline-block';} else b.style.display='none'; }
+        
+        const tabs = $('#vaTabs');
+        if (tabs) {
+          const m = (k, lbl, cnt) => '<div onclick="window.vaTab=\''+k+'\';renderVendorApprovals()" style="cursor:pointer;padding-bottom:8px;font-weight:600;color:'+(window.vaTab===k?'#2563eb':'#64748b')+';border-bottom:2px solid '+(window.vaTab===k?'#2563eb':'transparent')+'">'+lbl+' ('+cnt+')</div>';
+          tabs.innerHTML = m('Pending', 'Chờ duyệt', pc) + m('Approved', 'Đã duyệt', ac) + m('Rejected', 'Từ chối', rc);
+        }
+
+        var filtered = data ? data.filter(r => r.status === (window.vaTab || 'Pending')) : [];
+
+        if (!filtered.length) { 
+           p.innerHTML = '<div style="padding:20px;text-align:center;color:#666">Không có yêu cầu nào trong mục này.</div>'; 
            return; 
         }
         
-        const pc = data.filter(r => r.status === 'Pending').length;
-        const b = $('#pendingBadge'); if(b) { if(pc>0) {b.textContent=pc; b.style.display='inline-block';} else b.style.display='none'; }
-        
         let out = '<table class="mini"><thead><tr><th>Tên Công Ty</th><th>MST</th><th>Email</th><th>Trạng thái</th><th>Hành động (Gán Mã Vendor)</th></tr></thead><tbody>';
-        data.forEach(r => {
+        filtered.forEach(r => {
           out += `<tr>
             <td style="font-weight:600">${esc(r.company_name)}</td>
-            <td>${esc(r.tax_code || '')}</td>
+            <td>${r.tax_code ? esc(r.tax_code) : '<span style="color:#cbd5e1">—</span>'}</td>
             <td>${esc(r.email)}</td>
             <td>${
-              r.status === 'Pending' ? '<span class="badge b-warn">Chờ duyệt</span>' : 
-              (r.status === 'Approved' ? '<span class="badge b-ok">Đã duyệt</span>' : '<span class="badge b-bad">Từ chối</span>')
+              r.status === 'Pending' ? '<span class="badge" style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5">Chờ duyệt</span>' : 
+              (r.status === 'Approved' ? '<span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">Đã duyệt</span>' : '<span class="badge" style="background:#fff1f2;color:#e11d48;border:1px solid #fecdd3">Từ chối</span>')
             }</td>
             <td>
               ${r.status === 'Pending' ? `
                 <div style="display:flex;gap:6px">
-                  <input type="text" id="vcode_${r.id}" placeholder="Mã Vendor (VD: VD001)" style="width:140px;padding:4px 8px;border:1px solid #ccc;border-radius:4px">
-                  <button class="btn pri" style="padding:4px 8px;font-size:12px" onclick="approveVendorReg('${r.id}', '${esc(r.email)}')">Duyệt</button>
-                  <button class="btn" style="padding:4px 8px;font-size:12px;color:red" onclick="rejectVendorReg('${r.id}')">Từ chối</button>
+                  <input type="text" id="vcode_${r.id}" placeholder="Mã Vendor (VD: VD001)" style="width:160px;padding:4px 8px;border:1px solid #ccc;border-radius:4px">
+                  <button class="btn" style="background:#2563eb;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600" onclick="approveVendorReg('${r.id}', '${esc(r.email)}')">Duyệt & Gán mã</button>
+                  <button class="btn" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600" onclick="rejectVendorReg('${r.id}')">Từ chối</button>
                 </div>
               ` : `
-                ${r.assigned_vendor_code ? 'Gán mã: <b>' + esc(r.assigned_vendor_code) + '</b>' : '—'}
+                ${r.status === 'Rejected' ? '<span style="color:#94a3b8;font-size:12px;padding:4px 8px;background:#f1f5f9;border-radius:6px">Đã từ chối</span> ' + (r.reject_reason ? '<span style="font-size:11px;color:#64748b" title="'+esc(r.reject_reason)+'">ℹ️</span>' : '') : (r.assigned_vendor_code ? 'Gán mã: <b>' + esc(r.assigned_vendor_code) + '</b>' : '—')}
               `}
             </td>
           </tr>`;

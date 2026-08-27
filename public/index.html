@@ -3821,6 +3821,7 @@
       if (doc.vt) {
         const dd = daysTo(doc.vt);
         if (dd !== null) {
+          const ddStr = dd.toLocaleString('en-US');
           if (dd < 0) {
             badgeClass = "b-warn";
             badgeStyle = "background:#fff7e6;color:#d46b08;border:1px solid #ffd591;min-width:40px;margin:0";
@@ -3829,11 +3830,11 @@
           } else if (dd <= 60) {
             badgeClass = "b-warn";
             badgeStyle = "background:#fff7e6;color:#d46b08;border:1px solid #ffd591;min-width:40px;margin:0";
-            subText += `<div style="font-size:10px;color:#d46b08;margin-top:2px;font-weight:600">Còn ${dd} ngày</div>`;
-            spacerText += `<div style="padding:0 8px">Còn ${dd} ngày</div>`;
+            subText += `<div style="font-size:10px;color:#d46b08;margin-top:2px;font-weight:600">Còn ${ddStr} ngày</div>`;
+            spacerText += `<div style="padding:0 8px">Còn ${ddStr} ngày</div>`;
           } else {
-            subText += `<div style="font-size:10px;color:#64748b;margin-top:2px">Còn ${dd} ngày</div>`;
-            spacerText += `<div style="padding:0 8px">Còn ${dd} ngày</div>`;
+            subText += `<div style="font-size:10px;color:#64748b;margin-top:2px">Còn ${ddStr} ngày</div>`;
+            spacerText += `<div style="padding:0 8px">Còn ${ddStr} ngày</div>`;
           }
         }
       }

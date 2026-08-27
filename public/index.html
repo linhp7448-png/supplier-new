@@ -1937,7 +1937,14 @@
     .im2primary input {
       height: 44px;
       font-size: 14px;
-      border-color: #9eabb8
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .im2primary input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px #dbeafe;
+      outline: none;
     }
 
     .im2matches {
@@ -2055,9 +2062,10 @@
     }
 
     .im2preview {
-      background: #f7f9fb;
-      border-left: 1px solid var(--line);
-      padding: 15px
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
     }
 
     .im2preview h3 {
@@ -2236,10 +2244,9 @@
     .im2flow>div:not(.arw) {
       flex: 1;
       min-width: 150px;
-      background: #fff;
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 10px 14px;
+      padding: 6px 14px;
       display: flex;
       flex-direction: column;
       gap: 1px
@@ -2265,8 +2272,8 @@
     }
 
     .im2flow small {
-      font-size: 11px;
-      color: var(--muted)
+      font-size: 10px;
+      color: #64748b;
     }
 
     .im2flow .arw {
@@ -3237,7 +3244,7 @@
           html += '<div style="' + (childActive ? 'display:block;' : 'display:none;') + '">';
           it.items.forEach((sub, subix) => {
             var act = sub.v && st.view === sub.v;
-            html += '<button class="flyi' + (act ? ' active' : '') + '" style="padding-left:42px" onclick="flyPickSub(\'' + key + '\',' + ix + ',' + subix + ')"><span>' + sub.l + '</span></button>';
+            html += '<button class="flyi' + (act ? ' active' : '') + '" data-tip="' + esc(sub.desc || '') + '" style="padding-left:42px" onclick="flyPickSub(\'' + key + '\',' + ix + ',' + subix + ')"><span>' + sub.l + '</span></button>';
           });
           html += '</div>';
           return html;
@@ -3339,20 +3346,22 @@
 
       /* ---- helpers ---- */
       var panel = function (title, inner, minw, sub) { return '<div style="flex:1;min-width:' + (minw || 300) + 'px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px"><div style="font-weight:650;font-size:13.5px">' + title + '</div>' + (sub ? '<div style="color:var(--muted);font-size:11.5px;margin-top:1px">' + sub + '</div>' : '') + '<div style="margin-top:10px">' + inner + '</div></div>'; };
-      var kpi = function (l, val, c) { return '<div style="flex:1;min-width:130px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px"><div style="font-size:11.5px;color:var(--muted)">' + l + '</div><div style="font-size:23px;font-weight:700;' + (c || '') + '">' + val + '</div></div>'; };
+      var kpi = function (l, val, c, sub) { return '<div style="flex:1;min-width:130px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px"><div style="font-size:11.5px;color:var(--muted)">' + l + '</div><div style="font-size:23px;font-weight:700;' + (c || '') + ';display:flex;align-items:center;gap:8px">' + val + '</div>' + (sub || '') + '</div>'; };
       var donut = function (parts) {
-        var tot = parts.reduce(function (a, p) { return a + p.v; }, 0); if (!tot) return '<div style="color:var(--faint);font-size:12px">Chưa có dữ liệu.</div>'; var r = 38, C = 2 * Math.PI * r, off = 0;
+        var tot = parts.reduce(function (a, p) { return a + p.v; }, 0); if (!tot) return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:110px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px;opacity:0.2">🍩</div><div style="font-size:13px">Chưa có dữ liệu PO</div></div>'; var r = 38, C = 2 * Math.PI * r, off = 0;
         var segs = parts.filter(function (p) { return p.v > 0; }).map(function (p) { var d = p.v / tot * C; var s = '<circle r="' + r + '" cx="50" cy="50" fill="none" stroke="' + p.c + '" stroke-width="15" stroke-dasharray="' + d + ' ' + (C - d) + '" stroke-dashoffset="' + (-off) + '" transform="rotate(-90 50 50)"/>'; off += d; return s; }).join('');
         var leg = parts.map(function (p) { return '<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;margin:2px 0"><span style="width:9px;height:9px;border-radius:2px;background:' + p.c + ';flex:0 0 9px"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.l + '</span><b style="margin-left:auto">' + p.v + '</b><span style="color:var(--muted)">' + Math.round(p.v / tot * 100) + '%</span></div>'; }).join('');
         return '<div style="display:flex;gap:14px;align-items:center"><svg viewBox="0 0 100 100" style="width:108px;height:108px;flex:0 0 108px">' + segs + '<text x="50" y="55" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">' + tot + '</text></svg><div style="flex:1;min-width:0">' + leg + '</div></div>';
       };
       var vbars = function (data) {
+        var hasVal = data.some(function (d) { return d.v > 0; });
+        if (!hasVal) return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:168px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px;opacity:0.2">📊</div><div style="font-size:13px">Chưa có dữ liệu giao dịch PO trong kỳ</div><button class="btn" style="margin-top:12px" onclick="toast(\'Tính năng đang phát triển\')">+ Tạo PO mới</button></div>';
         var max = 1; data.forEach(function (d) { if (d.v > max) max = d.v; }); var W = 560, H = 168, pb = 24; var bw = W / data.length;
         return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto">' + data.map(function (d, i) { var h = Math.round((H - pb - 16) * d.v / max); var x = i * bw; return '<rect x="' + (x + 5) + '" y="' + (H - pb - h) + '" width="' + (bw - 10) + '" height="' + Math.max(h, 1) + '" rx="3" fill="var(--accent)" opacity="' + (d.v ? '1' : '.25') + '"/>' + (d.v ? '<text x="' + (x + bw / 2) + '" y="' + (H - pb - h - 4) + '" text-anchor="middle" font-size="9.5" fill="var(--muted)">' + fmtShort(d.v) + '</text>' : '') + '<text x="' + (x + bw / 2) + '" y="' + (H - 7) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + d.l + '</text>'; }).join('') + '</svg>';
       };
-      var hbars = function (list, color, valFn) {
+      var hbars = function (list, color, valFn, isLink) {
         var max = 1; list.forEach(function (d) { if (d.v > max) max = d.v; });
-        return list.map(function (d) { return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">' + d.l + '</span><b style="white-space:nowrap">' + (valFn ? valFn(d) : d.v) + '</b></div><div style="background:var(--line2);border-radius:4px;height:7px;margin-top:2px"><div style="background:' + color + ';height:7px;border-radius:4px;width:' + (d.v ? Math.max(2, Math.round(d.v / max * 100)) : 0) + '%"></div></div></div>'; }).join('') || '<div style="color:var(--faint);font-size:12px">Chưa có dữ liệu.</div>';
+        return list.length && list.some(function(d){return d.v>0;}) ? list.map(function (d) { return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px"><span ' + (isLink && d.id ? 'onclick="st.selId=\'' + d.id + '\';openEdit()" onmouseover="this.style.textDecoration=\'underline\';this.style.color=\'#2563eb\'" onmouseout="this.style.textDecoration=\'none\';this.style.color=\'inherit\'" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;cursor:pointer"' : 'style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0"') + ' title="' + esc(d.l) + '">' + d.l + '</span><b style="white-space:nowrap">' + (valFn ? valFn(d) : d.v) + '</b></div><div style="background:var(--line2);border-radius:4px;height:7px;margin-top:2px"><div style="background:' + color + ';height:7px;border-radius:4px;width:' + (d.v ? Math.max(2, Math.round(d.v / max * 100)) : 0) + '%"></div></div></div>'; }).join('') : '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px;opacity:0.2">📊</div><div style="font-size:13px">Chưa có dữ liệu</div></div>';
       };
       var gauge = function (pct, label, goodAt, has) {
         pct = Math.max(0, Math.min(100, pct || 0)); var col = pct >= goodAt ? 'var(--ok)' : pct >= goodAt - 15 ? 'var(--warn)' : 'var(--bad)';
@@ -3402,7 +3411,7 @@
       var compScores = DB.map(function (v) { return FIELDS.filter(function (f) { return f[1](v); }).length / FIELDS.length; });
       var compAvg = compScores.length ? Math.round(compScores.reduce(function (a, b) { return a + b; }, 0) / compScores.length * 100) : 0;
       var compFull = compScores.filter(function (x) { return x >= 0.9; }).length, compMid = compScores.filter(function (x) { return x >= 0.7 && x < 0.9; }).length, compLow = compScores.filter(function (x) { return x < 0.7; }).length;
-      var compWorst = DB.map(function (v, i) { return { l: (v.code ? v.code + ' · ' : '') + v.name, v: Math.round(compScores[i] * 100) }; }).sort(function (a, b) { return a.v - b.v; }).slice(0, 8);
+      var compWorst = DB.map(function (v, i) { return { id: v.id, l: (v.code ? v.code + ' · ' : '') + v.name, v: Math.round(compScores[i] * 100) }; }).sort(function (a, b) { return a.v - b.v; }).slice(0, 8);
       /* ---- insights ---- */
       var ins = [];
       if (byspend.length >= 5 && totSpend > 0) {
@@ -3430,16 +3439,17 @@
       var insHtml = ins.map(function (x) { return '<div style="display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:12.5px;line-height:1.5"><span style="width:9px;height:9px;border-radius:50%;background:' + x.c + ';flex:0 0 9px;margin-top:4px"></span><span>' + x.t + '</span></div>'; }).join('');
 
       /* ---- render ---- */
+      var saPct = total ? Math.round(sadone / total * 100) : 0, tePct = total ? Math.round(tedone / total * 100) : 0;
       el.innerHTML = '<div style="padding:16px 18px;overflow:auto">'
         + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
-        + kpi('Tổng NCC', total) + kpi('Đang hoạt động', active) + kpi('Nợ thuế', taxrisk, taxrisk ? 'color:var(--bad)' : '') + kpi('Vượt vốn ĐL', caprisk, caprisk ? 'color:var(--bad)' : '') + kpi('Đã SA', sadone + '/' + total) + kpi('Đã TE', tedone + '/' + total) + '</div>'
+        + kpi('Tổng NCC', total) + kpi('Đang hoạt động', active) + kpi('Nợ thuế', taxrisk > 0 ? taxrisk + '<span style="background:#ffe4e6;color:#be123c;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600">Cảnh báo</span>' : 0, taxrisk ? 'color:var(--bad)' : '') + kpi('Vượt vốn ĐL', caprisk, caprisk ? 'color:var(--bad)' : '') + kpi('Đã SA', sadone + '/' + total, '', '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><div style="flex:1;height:4px;background:var(--line2);border-radius:2px"><div style="height:4px;background:var(--ok);border-radius:2px;width:' + saPct + '%"></div></div><span style="font-size:10px;color:var(--muted)">' + saPct + '%</span></div>') + kpi('Đã TE', tedone + '/' + total, '', '<div style="display:flex;align-items:center;gap:6px;margin-top:6px"><div style="flex:1;height:4px;background:var(--line2);border-radius:2px"><div style="height:4px;background:var(--ok);border-radius:2px;width:' + tePct + '%"></div></div><span style="font-size:10px;color:var(--muted)">' + tePct + '%</span></div>') + '</div>'
         + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">'
         + panel('💡 Insight &amp; khuyến nghị', insHtml, 420, 'Tự động phân tích từ dữ liệu NCC, PO, giao hàng và hồ sơ')
         + '</div>'
         + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">'
         + panel('Độ đầy đủ hồ sơ NCC', '<div style="display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap">' + gauge(compAvg, 'Hoàn thiện trung bình', 90, DB.length > 0) + '<div style="font-size:12.5px;line-height:2"><span class="badge b-ok">≥90%</span> <b>' + compFull + '</b> NCC<br><span class="badge b-warn">70–89%</span> <b>' + compMid + '</b> NCC<br><span class="badge b-bad">&lt;70%</span> <b>' + compLow + '</b> NCC</div></div>', 280, 'Chấm theo ' + FIELDS.length + ' trường trọng yếu')
-        + panel('Trường còn thiếu nhiều nhất', hbars(compMiss, 'var(--warn)', function (d) { return d.v + ' NCC'; }), 320, 'Ưu tiên bổ sung từ trên xuống')
-        + panel('NCC hổng thông tin nhất', hbars(compWorst, 'var(--bad)', function (d) { return d.v + '%'; }), 300, 'Mở NCC → thả GPKD để AI điền nhanh')
+        + panel('Trường còn thiếu nhiều nhất', hbars(compMiss, '#f59e0b', function (d) { return d.v + ' NCC'; }), 320, 'Ưu tiên bổ sung từ trên xuống')
+        + panel('NCC hổng thông tin nhất', hbars(compWorst, '#f43f5e', function (d) { return d.v + '%'; }, true), 300, 'Mở NCC → thả GPKD để AI điền nhanh')
         + '</div>'
         + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">'
         + panel('Chi tiêu theo tháng (12 tháng)', '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">Tổng 12T: <b style="color:var(--text)">' + fmtShort(months.reduce(function (a, m) { return a + m.v; }, 0)) + ' đ</b></div>' + vbars(months), 460, 'Theo ngày đặt trên PO')
@@ -3451,9 +3461,9 @@
         + panel('NCC theo nhóm hàng', hbars(cats8, 'var(--blue)'), 260)
         + '</div>'
         + '<div style="display:flex;gap:12px;flex-wrap:wrap">'
-        + panel('Hiệu suất giao hàng', '<div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">' + gauge(onTimePct, 'Giao đúng hạn', 90, (perf.onTime + perf.late) > 0) + gauge(fillPct, 'Giao đủ số lượng', 98, perf.fillDen > 0) + '</div><table class="mini" style="table-layout:fixed;width:100%"><thead><tr><th>NCC</th><th style="width:44px">Lượt</th><th style="width:66px">Đúng hạn</th><th style="width:60px">Giao đủ</th></tr></thead><tbody>' + (topV.map(function (t) { return '<tr><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(t.name) + '">' + esc(t.name) + '</td><td>' + t.deliv + '</td><td style="white-space:nowrap;' + (t.ontime < 90 ? 'color:var(--warn);font-weight:600' : 'color:var(--ok)') + '">' + t.ontime + '%</td><td style="white-space:nowrap;' + (t.fill < 98 ? 'color:var(--warn);font-weight:600' : 'color:var(--ok)') + '">' + t.fill + '%</td></tr>'; }).join('') || '<tr><td colspan=4 style="color:var(--faint)">Chưa có dữ liệu giao hàng — sẽ có khi NCC xác nhận giao qua cổng.</td></tr>') + '</tbody></table>', 380, perf.deliv + ' lượt giao')
+        + panel('Hiệu suất giao hàng', '<div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">' + gauge(onTimePct, 'Giao đúng hạn', 90, (perf.onTime + perf.late) > 0) + gauge(fillPct, 'Giao đủ số lượng', 98, perf.fillDen > 0) + '</div><table class="mini" style="table-layout:fixed;width:100%"><thead><tr><th>NCC</th><th style="width:44px">Lượt</th><th style="width:66px">Đúng hạn</th><th style="width:60px">Giao đủ</th></tr></thead><tbody>' + (topV.length ? topV.map(function (t) { return '<tr><td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(t.name) + '">' + esc(t.name) + '</td><td>' + t.deliv + '</td><td style="white-space:nowrap;' + (t.ontime < 90 ? 'color:var(--warn);font-weight:600' : 'color:var(--ok)') + '">' + t.ontime + '%</td><td style="white-space:nowrap;' + (t.fill < 98 ? 'color:var(--warn);font-weight:600' : 'color:var(--ok)') + '">' + t.fill + '%</td></tr>'; }).join('') : '<tr><td colspan=4 style="text-align:center;padding:32px 0"><div style="font-size:32px;opacity:0.2;margin-bottom:8px">📦</div><div style="font-size:13px;color:var(--muted)">Chưa có dữ liệu giao dịch PO trong kỳ</div></td></tr>') + '</tbody></table>', 380, perf.deliv + ' lượt giao')
         + panel('Phễu Data bank', hbars([{ l: 'Candidate (RFI)', v: rel.Candidate }, { l: 'Prospective (RFQ)', v: rel.Prospective }, { l: 'Spend Authorized (nhận PO)', v: rel.Spend_Authorized }, { l: 'Disqualified', v: rel.Disqualified }], 'var(--ok)'), 250, 'Nguồn NCC đang phát triển')
-        + panel('NCC rủi ro theo khu vực', hbars(regArr, 'var(--bad)'), 250, 'Nợ thuế / vượt vốn / đình chỉ')
+        + panel('NCC rủi ro theo khu vực', hbars(regArr, '#f43f5e'), 250, 'Nợ thuế / vượt vốn / đình chỉ')
         + '</div></div>';
     }
 
@@ -3567,7 +3577,16 @@
     /* ---------- toolbar ---------- */
     function toolbar() {
       const v = DB.find(x => x.id === st.selId);
-      if (st.view === 'itemmgmt') { var _tt = { work: 'Công việc của tôi', new: 'Thêm / thay sản phẩm', list: 'Sản phẩm hợp nhất', category: 'Cây phân loại', journey: 'Data Journey', control: 'Kiểm soát & ngoại lệ', rules: 'Rules & Principles' }[st.itemtab || 'work'] || ''; var _showAdd = ['work', 'list', 'new'].includes(st.itemtab || 'work'); $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Item Management — ' + _tt + '</div>' + (_showAdd ? '<button class="tbtn pri" style="margin-left:12px" onclick="imSmartOpen()">+ Thêm / thay sản phẩm</button><button class="tbtn" style="margin-left:12px; border:1px solid #c9cdd4; color:#2b6cb0; font-weight:600" onclick="imMultiAddOpen()">+ Thêm nhiều sản phẩm (Grid)</button>' : '') + (st.itemtab === 'list' ? '<button class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4" onclick="document.getElementById(\'scmFileInput\').click()">📥 Import SCM</button><button id="btnBulkImg" class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4; color:#2b6cb0" onclick="bulkImageOptions()">🖼 Cập nhật ảnh hàng loạt</button>' : '') + '<span class="count">Control by exception · Vista · NAV2017</span>' + imHelpBtn(st.itemtab || 'work'); return; }
+      if (st.view === 'itemmgmt') { 
+          var _tt = { work: 'Công việc của tôi', new: 'Thêm / thay sản phẩm', list: 'Sản phẩm hợp nhất', category: 'Cây phân loại', journey: 'Data Journey', control: 'Kiểm soát & ngoại lệ', rules: 'Rules & Principles', multi_add: 'Sản phẩm hợp nhất' }[st.itemtab || 'work'] || ''; 
+          var _showAdd = ['work', 'list', 'new', 'multi_add'].includes(st.itemtab || 'work'); 
+          var _isGrid = st.itemtab === 'multi_add';
+          $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Item Management — ' + _tt + '</div>' + 
+          (_showAdd ? '<button class="tbtn pri" style="margin-left:12px' + (_isGrid ? ';opacity:0.4;pointer-events:none' : '') + '" onclick="imSmartOpen()">+ Thêm / thay sản phẩm</button><button class="tbtn" style="margin-left:12px; border:1px solid #c9cdd4; color:#2b6cb0; font-weight:600' + (_isGrid ? ';opacity:0.4;pointer-events:none' : '') + '" onclick="imMultiAddOpen()">+ Thêm nhiều sản phẩm (Grid)</button>' : '') + 
+          (st.itemtab === 'list' || _isGrid ? '<button class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4' + (_isGrid ? ';opacity:0.4;pointer-events:none' : '') + '" onclick="document.getElementById(\'scmFileInput\').click()">📥 Import SCM</button><button id="btnBulkImg" class="tbtn" style="margin-left:12px; background:#f0f2f5; border:1px solid #c9cdd4; color:#2b6cb0' + (_isGrid ? ';opacity:0.4;pointer-events:none' : '') + '" onclick="bulkImageOptions()">🖼 Cập nhật ảnh hàng loạt</button>' : '') + 
+          '<span class="count">Control by exception · Vista · NAV2017</span>' + imHelpBtn(st.itemtab || 'work'); 
+          return; 
+      }
       if (st.view === 'databank') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Supplier Data Bank</div><button class="tbtn pri" style="margin-left:12px" onclick="openNew(\'Candidate\')">+ Tạo NCC tiềm năng</button><select class="f" id="frel" style="margin-left:8px"><option value="">Mọi quan hệ</option>' + ['Candidate', 'Prospective', 'Disqualified'].map(function (s) { return '<option ' + (st.frel === s ? 'selected' : '') + '>' + s + '</option>'; }).join('') + '</select>'; var fr = $('#frel'); if (fr) fr.onchange = function (e) { st.frel = e.target.value; saveSt(); databankView(); }; return; }
       if (st.view === 'dloc') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">Quy định giao nhận (kho rạp)</div><button class="tbtn pri" style="margin-left:12px" onclick="dlocEdit(null)">+ Thêm địa điểm</button>'; return; }
       if (st.view === 'rfq') { $('#toolbar').innerHTML = '<div style="font-weight:650;font-size:14px">RFQ / So sánh giá</div><button class="tbtn pri" style="margin-left:12px" onclick="rfqNew()">+ Tạo RFQ</button>'; return; }
@@ -6643,7 +6662,6 @@ function imOverview() {
     }
     function imWork() {
       var items = IMD && IMD.items || [], subs = IMD && IMD.subItems || [], reqs = IMREQ || [];
-      // ==== KPI số liệu thật ====
       var itemActive = items.filter(function (x) { return String(imVal(x, 'Status') || imVal(x, 'Review Status') || '').toLowerCase().indexOf('active') >= 0 || imVal(x, 'Review Status') === 'Approved'; }).length;
       var subCount = subs.length;
       var reqAll = reqs.length;
@@ -6654,45 +6672,36 @@ function imOverview() {
       var action = mine.filter(function (r) { return !['Approved', 'Rejected', 'Cancelled'].includes(r.status); });
       var needAction = action.length;
 
-      // ==== Feed: vừa được tự động xử lý (từ requests Approved gần nhất) ====
       var feed = reqs.filter(function (r) { return r.status === 'Approved'; })
         .sort(function (a, b) { return String(b.decided_at || b.created_at || '').localeCompare(String(a.decided_at || a.created_at || '')); })
         .slice(0, 5);
       var feedHtml = feed.length ? feed.map(function (r) {
         return '<div class="im2feed"><i>✓</i><div><b>' + esc(r.requested_name || r.request_no || 'Sản phẩm') + '</b><small>' + esc(r.request_type || 'Tạo Sub Item') + ' · ' + esc(r.item_code || r.sub_item_code || '') + '</small></div><span class="imcode">' + esc(r.request_no || '') + '</span></div>';
-      }).join('') : '<div class="im2empty">Chưa có bản ghi tự động gần đây.</div>';
+      }).join('') : '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;color:var(--muted);text-align:center"><div style="font-size:32px;margin-bottom:8px;opacity:0.2">🤖</div><div style="font-size:13px">Chưa có bản ghi tự động gần đây.</div></div>';
 
-      // ==== Exception: phân loại việc cần xử lý ====
       var exDup = action.filter(function (r) { return /duplicate|trùng/i.test(String(r.status) + String(r.current_owner)); }).length;
       var exUom = action.filter(function (r) { return /uom/i.test(String(r.status) + String(r.current_owner)); }).length;
       var exCat = action.filter(function (r) { return String(r.status) === 'Pending_Category'; }).length;
       var exFin = action.filter(function (r) { return String(r.status) === 'Pending_Finance'; }).length;
 
+      var disableBtns = st.itemtab === 'multi_add' ? 'disabled style="opacity:0.5;pointer-events:none"' : '';
+
       return ''
-        + '<div style="font-size:10px;color:var(--muted);margin-bottom:10px">Nguồn: ' + esc(IMSOURCE) + ' · Nguồn chuẩn MDM → đẩy xuống NAV2017 & Vista</div>'
-        // Hero
-        + '<section class="im2start"><div><span class="impill ok">1 FORM DUY NHẤT · CONTROL BY EXCEPTION</span><h2>Chỉ khai báo nhu cầu một lần</h2><p>Hệ thống tự tìm master trùng, chuẩn hóa UOM, sinh Sub Item, nối NCC và tự duyệt khi đúng rule. Con người chỉ xử lý ngoại lệ.</p><div class="im2actions"><button class="btn pri" onclick="imSmartOpen()">+ Thêm / thay sản phẩm</button><button class="btn" style="background:#fff;border:1px solid #ccc;color:#147a52;font-weight:600" onclick="imMultiAddOpen()">+ Thêm nhiều sản phẩm</button><button class="btn" onclick="imTab(\'search\')">Kiểm tra master trước</button></div></div></section>'
-        // KPI hàng
+        + '<div style="margin-bottom:12px"><span style="background:#f1f5f9;color:#64748b;font-size:12px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:6px">Nguồn: <b>' + esc(IMSOURCE) + '</b> · Nguồn chuẩn MDM → đẩy xuống NAV2017 & Vista</span></div>'
+        + '<section class="im2start"><div><span class="impill ok">1 FORM DUY NHẤT · CONTROL BY EXCEPTION</span><h2>Chỉ khai báo nhu cầu một lần</h2><p>Hệ thống tự tìm master trùng, chuẩn hóa UOM, sinh Sub Item, nối NCC và tự duyệt khi đúng rule. Con người chỉ xử lý ngoại lệ.</p><div class="im2actions"><button class="btn pri" onclick="imSmartOpen()" ' + disableBtns + '>+ Thêm / thay sản phẩm</button><button class="btn" style="background:#fff;border:1px solid #ccc;color:#147a52;font-weight:600" onclick="imMultiAddOpen()" ' + disableBtns + '>+ Thêm nhiều sản phẩm</button><button class="btn" onclick="imTab(\'search\')" ' + disableBtns + '>Kiểm tra master trước</button></div></div></section>'
         + '<div class="im2kpi">'
         + '<div class="im2card"><small>Item Active</small><b>' + itemActive.toLocaleString('vi-VN') + '</b><span>Golden records</span></div>'
         + '<div class="im2card"><small>Sub Item</small><b>' + subCount.toLocaleString('vi-VN') + '</b><span>Brand / pack / spec</span></div>'
         + '<div class="im2card ok"><small>Auto-approved</small><b>' + autoPct + '%</b><span>Không cần người duyệt</span></div>'
         + '<div class="im2card ' + (needAction > 0 ? 'warn' : '') + '"><small>Cần xử lý</small><b>' + needAction + '</b><span>Chỉ exception</span></div>'
         + '</div>'
-        // Luồng 3 bước
         + '<div class="im2flow"><div><span>1</span><b>Khai báo nhu cầu</b><small>6 trường chính</small></div><div class="arw">→</div><div><span>2</span><b>System xử lý</b><small>Match · UOM · rule</small></div><div class="arw">→</div><div><span>3</span><b>Hoàn tất</b><small>Auto hoặc 1 owner</small></div></div>'
-        // 2 cột: Feed + Exception
         + '<div class="im2grid">'
         + '<div class="im2col"><div class="im2h"><b>Vừa được tự động xử lý</b><span class="impill ok">Live</span></div>' + feedHtml + '</div>'
         + '<div class="im2col"><div class="im2h"><b>Công việc cần xử lý</b><small>Đúng người · đúng lý do</small></div>'
-        + '<div class="im2ex"><span>Chờ Category duyệt</span><b>' + exCat + '</b></div>'
-        + '<div class="im2ex"><span>Duplicate nghi ngờ</span><b>' + exDup + '</b></div>'
-        + '<div class="im2ex"><span>UOM ngoại lệ</span><b>' + exUom + '</b></div>'
-        + '<div class="im2ex"><span>Chờ Finance</span><b>' + exFin + '</b></div>'
-        + (needAction === 0 ? '<div class="im2empty">Không có ngoại lệ nào cần xử lý.</div>' : '')
+        + (needAction === 0 ? '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 24px;color:var(--muted);text-align:center"><div style="font-size:40px;margin-bottom:8px;color:#10b981;opacity:0.8">✓</div><div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px">Tất cả đã xử lý xong!</div><div style="font-size:12px">Không có ngoại lệ nào cần duyệt.</div></div>' : '<div class="im2ex"><span>Chờ Category duyệt</span><b>' + exCat + '</b></div><div class="im2ex"><span>Duplicate nghi ngờ</span><b>' + exDup + '</b></div><div class="im2ex"><span>UOM ngoại lệ</span><b>' + exUom + '</b></div><div class="im2ex"><span>Chờ Finance</span><b>' + exFin + '</b></div>')
         + '</div>'
         + '</div>'
-        // Giá sắp hết hiệu lực (phân tích cho Procurement)
         + (function () {
           var today = new Date().toISOString().slice(0, 10), soon = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
           var exp = [], sn = [];
@@ -6707,7 +6716,6 @@ function imOverview() {
           }).join('');
           return '<div class="impanel" style="padding:0;margin-top:14px"><div class="im2head"><div><b>💰 Giá sắp hết hiệu lực</b><small>' + exp.length + ' đã hết hạn · ' + sn.length + ' hết trong 30 ngày — Procurement cần đàm phán/tạo offer mới</small></div><button class="btn" onclick="imTab(\'list\')">Xem Golden Record</button></div><table class="imtbl" style="font-size:12px"><thead><tr><th>Sub Item</th><th>Vendor</th><th>Valid To</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
         })()
-        // Rule tự động
         + '<div class="im2rule"><b>Rule tự động — đúng rule thì không phát sinh approval</b><div><i>✓</i><p>Reuse Item Active khi match hợp lệ</p></div><div><i>✓</i><p>Chuẩn hóa UOM về gr/ml/cái</p></div><div><i>✓</i><p>FEFO/FIFO lấy từ Category</p></div><div><i>✓</i><p>Chỉ sync master Active xuống NAV/Vista</p></div></div>';
     }
     function imFindRows() { var q = (IMQ || '').trim().toLowerCase(); if (q.length < 2) return []; return IMD.items.filter(function (x) { return [imVal(x, 'Item Code'), imVal(x, 'Item Name / Functional Spec'), imVal(x, 'Legacy Item No'), imVal(x, 'Category Code')].some(function (y) { return y.toLowerCase().includes(q); }); }).slice(0, 30); }
@@ -7014,13 +7022,13 @@ async function imMultiAddCommit() {
             imRender();
         }
     }
-function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '' }; var old = $('#im2shade'); if (old) old.remove(); var d = document.createElement('div'); d.id = 'im2shade'; d.className = 'im2shade'; d.innerHTML = '<div class="im2modal"><header><div><span>ĐỀ NGHỊ · KHAI 1 LẦN</span><h2>Đề nghị sản phẩm</h2><p>Buyer khai — Admin duyệt. G-ERP tự sinh mã & cấu trúc master phía sau.</p></div><button class="im2close" onclick="imSmartClose()">×</button></header><div class="im2body"><section class="im2form"><label class="im2primary">Sản phẩm muốn mua<input id="im2name" value="' + esc(IMSMART.name) + '" placeholder="Tên trên bao bì hoặc nhu cầu sử dụng…" oninput="IMSMART.name=this.value;IMSMART.item=\'\';imSmartRefresh()"></label><div id="im2matches"></div><div class="im2fields"><div class="im2grouplbl" style="grid-column:1/-1;color:#2b6cb0">🏢 Thông tin lõi — phòng ban owner</div><label>Bộ phận<select id="im2domain"><option>F&B</option><option>Kỹ thuật</option><option>Operations</option><option>Marketing</option></select></label><label>Nhãn hiệu / model<input id="im2brand" placeholder="VD: TH true MILK" oninput="imBrandSync();imSmartRefresh()"></label><label>Manufacturer (NSX)<input id="im2manu" placeholder="Tự lấy theo brand — sửa nếu khác" oninput="this.dataset.touched=1"></label><div class="im2grouplbl" style="grid-column:1/-1;color:#147a52;margin-top:4px">🛒 Mua hàng — Buyer khai (Procurement bổ sung sau nếu chưa biết)</div><label>Đơn vị mua<select id="im2pu" onchange="imSmartRefresh()">' + ['chai', 'hop', 'thung', 'bao', 'bich', 'cai', 'goi', 'lon', 'tui', 'vi'].map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select></label><label>Quy cách 1 đơn vị mua<div class="im2compound"><input id="im2factor" type="number" min="0.000001" value="1000" oninput="imSmartRefresh()"><select id="im2base" onchange="imSmartRefresh()"><option>gr</option><option selected>ml</option><option>cai</option></select></div></label><label class="im2wide">Nhà cung cấp <span style="font-weight:400;color:var(--muted)">(chọn từ NCC đã có)</span><input id="im2supplier" list="im2suplist" placeholder="Gõ để tìm NCC trong hệ thống…" autocomplete="off">' + imSupOptions() + '</label></div><label class="im2upload"><input id="im2file" type="file" accept="image/*"><span style="font-size:20px;color:var(--accent)">＋</span><div><b>Thêm ảnh bao bì / spec</b><small>Ảnh được lưu cùng Product Content</small></div></label><label class="im2check"><input id="im2exact" type="checkbox" onchange="imSmartRefresh()"><span>Bắt buộc đúng brand/model, không được tự thay thế</span></label></section><aside class="im2preview" id="im2preview"></aside></div><footer><span>Buyer khai · không nhập code · Admin duyệt · G-ERP tự sinh mã</span><button class="btn" onclick="imSmartClose();imBulkOpen()">📋 Nhập nhiều dòng</button><button class="btn" onclick="imSmartClose()">Hủy</button><button class="btn pri" id="im2submit" onclick="imSmartSubmit()">Gửi</button></footer></div>'; document.body.appendChild(d); d.onclick = function (e) { if (e.target === d) imSmartClose(); }; if (IMSMART.item) imSmartSelect(IMSMART.item); else imSmartRefresh(); setTimeout(function () { var n = $('#im2name'); if (n) n.focus(); }, 0); }
+function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '' }; var old = $('#im2shade'); if (old) old.remove(); var d = document.createElement('div'); d.id = 'im2shade'; d.className = 'im2shade'; d.innerHTML = '<div class="im2modal"><header><div><span>ĐỀ NGHỊ · KHAI 1 LẦN</span><h2>Đề nghị sản phẩm</h2><p>Buyer khai — Admin duyệt. G-ERP tự sinh mã & cấu trúc master phía sau.</p></div><div style="display:flex;align-items:center;gap:16px"><a href="#" onclick="event.preventDefault();imSmartClose();imMultiAddOpen()" style="font-size:13px;color:#2b6cb0;text-decoration:none;font-weight:500">👉 Cần nhập nhiều? Dùng bảng Grid</a><button class="im2close" onclick="imSmartClose()">×</button></div></header><div class="im2body"><section class="im2form"><label class="im2primary">Sản phẩm muốn mua<input id="im2name" value="' + esc(IMSMART.name) + '" placeholder="Tên trên bao bì hoặc nhu cầu sử dụng…" oninput="IMSMART.name=this.value;IMSMART.item=\'\';imSmartRefresh()"></label><div id="im2matches"></div><div class="im2fields"><div class="im2grouplbl" style="grid-column:1/-1;color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-bottom:8px;margin-top:12px">🏢 Thông tin lõi — phòng ban owner</div><label>Bộ phận<select id="im2domain"><option>F&B</option><option>Kỹ thuật</option><option>Operations</option><option>Marketing</option></select></label><label>Nhãn hiệu / model<input id="im2brand" placeholder="VD: TH true MILK" oninput="imBrandSync();imSmartRefresh()"></label><label class="im2wide">Manufacturer (NSX)<input id="im2manu" placeholder="Tự lấy theo brand — sửa nếu khác" oninput="this.dataset.touched=1"></label><div class="im2grouplbl" style="grid-column:1/-1;color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-bottom:8px;margin-top:16px">🛒 Mua hàng — Buyer khai <span style="text-transform:none;font-weight:400;color:#94a3b8">(Procurement bổ sung sau nếu chưa biết)</span></div><label>Đơn vị mua<select id="im2pu" onchange="imSmartRefresh()">' + ['chai', 'hop', 'thung', 'bao', 'bich', 'cai', 'goi', 'lon', 'tui', 'vi'].map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select></label><label>Quy cách 1 đơn vị mua<div class="im2compound"><input id="im2factor" type="number" min="0.000001" value="1000" oninput="imSmartRefresh()"><select id="im2base" onchange="imSmartRefresh()"><option>gr</option><option selected>ml</option><option>cai</option></select></div></label><label class="im2wide">Nhà cung cấp <span style="font-weight:400;color:var(--muted)">(chọn từ NCC đã có)</span><input id="im2supplier" list="im2suplist" placeholder="Gõ để tìm NCC trong hệ thống…" autocomplete="off">' + imSupOptions() + '</label></div><label class="im2upload"><input id="im2file" type="file" accept="image/*"><span style="font-size:20px;color:var(--accent)">＋</span><div><b>Thêm ảnh bao bì / spec</b><small>Ảnh được lưu cùng Product Content</small></div></label><label class="im2check"><input id="im2exact" type="checkbox" onchange="imSmartRefresh()"><span>Bắt buộc đúng brand/model, không được tự thay thế</span></label></section><aside class="im2preview" id="im2preview"></aside></div><footer><span>Buyer khai · không nhập code · Admin duyệt · G-ERP tự sinh mã</span><button class="btn" onclick="imSmartClose()">Hủy</button><button class="btn pri" id="im2submit" onclick="imSmartSubmit()">Gửi phê duyệt</button></footer></div>'; document.body.appendChild(d); d.onclick = function (e) { if (e.target === d) imSmartClose(); }; if (IMSMART.item) imSmartSelect(IMSMART.item); else imSmartRefresh(); setTimeout(function () { var n = $('#im2name'); if (n) n.focus(); }, 0); }
     function imSupOptions() { var arr = (typeof DB !== 'undefined' && DB) ? DB : []; return '<datalist id="im2suplist">' + arr.slice(0, 1000).map(function (v) { var lbl = (v.code ? v.code + ' — ' : '') + (v.name || ''); return '<option value="' + esc(lbl) + '">'; }).join('') + '</datalist>'; }
     function imBrandSync() { var b = $('#im2brand'), m = $('#im2manu'); if (b && m && !m.dataset.touched) m.value = b.value; }
     function imSmartClose() { var d = $('#im2shade'); if (d) d.remove(); }
     function imSmartCandidates() { var q = String(IMSMART.name || '').trim().toLowerCase(); if (q.length < 2) return []; var words = q.split(/\s+/).filter(function (w) { return w.length > 1; }); return IMD.items.map(function (x) { var s = (imVal(x, 'Item Name / Functional Spec') + ' ' + imVal(x, 'Legacy Item No')).toLowerCase(), score = words.filter(function (w) { return s.includes(w); }).length; return { x: x, score: score }; }).filter(function (r) { return r.score > 0; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3).map(function (r) { return r.x; }); }
     function imSmartSelect(code) { IMSMART.item = code; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === code; }); if (it) { var b = $('#im2base'); if (b) b.value = imVal(it, 'Functional UOM'); } imSmartRefresh(); }
-    function imSmartRefresh() { var wrap = $('#im2matches'); if (!wrap) return; var cand = imSmartCandidates(); wrap.innerHTML = cand.length ? '<div class="im2matches"><b style="font-size:10.5px">Hệ thống tìm thấy Item có thể dùng lại</b><p>Chọn để không tạo trùng và không sửa BOM.</p>' + cand.map(function (x) { var code = imVal(x, 'Item Code'), sel = IMSMART.item === code; return '<button class="im2match ' + (sel ? 'sel' : '') + '" onclick="imSmartSelect(\'' + esc(code) + '\')"><p><b>' + esc(imVal(x, 'Item Name / Functional Spec')) + '</b><small>' + esc(code) + ' · ' + esc(imVal(x, 'Category Code')) + '</small></p><em>' + (sel ? '✓ Đã chọn' : 'Gắn vào Item này') + '</em></button>'; }).join('') + '</div>' : ''; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === IMSMART.item; }), domain = $('#im2domain') ? $('#im2domain').value : 'F&B', brand = $('#im2brand') ? $('#im2brand').value.trim() : '', pu = $('#im2pu') ? $('#im2pu').value : '', factor = Number($('#im2factor') ? $('#im2factor').value : 0), base = $('#im2base') ? $('#im2base').value : 'ml', exact = $('#im2exact') && $('#im2exact').checked, ready = !!(it && brand && factor > 0 && !exact && imVal(it, 'Functional UOM') === base && imVal(it, 'Domain') === domain); var p = $('#im2preview'); p.innerHTML = '<h3>⚡ G-ERP tự xử lý</h3><ul><li><span>Category</span><b>' + (it ? esc(imVal(it, 'Category Code')) : 'Tự nhận diện · owner xác nhận') + '</b></li><li><span>Item Code</span><b>' + (it ? 'Dùng lại ' + esc(IMSMART.item) : 'Tự sinh sau khi duyệt') + '</b></li><li><span>Sub Item Code</span><b>Tự sinh theo Item</b></li><li><span>Conversion</span><b>1 ' + esc(pu) + ' = ' + factor.toLocaleString('vi-VN') + ' ' + esc(base) + '</b></li><li><span>Stock policy</span><b>' + (exact ? 'Exact match' : 'FEFO · tự phân bổ') + '</b></li><li><span>Supplier Offer</span><b>Procurement bổ sung nếu cần</b></li></ul><div class="im2decision ' + (ready ? 'ok' : 'warn') + '"><b>' + (ready ? '✓ Đủ điều kiện tự duyệt' : '! Gửi đúng 1 owner xác nhận') + '</b><small>' + (ready ? 'Dùng Item có sẵn · UOM hợp lệ · policy chuẩn' : (!it ? 'Item mới cần Category Owner xác nhận' : exact ? 'Exact-only cần owner xác nhận' : imVal(it, 'Domain') !== domain ? 'Bộ phận không khớp domain Item' : 'Bổ sung brand hoặc kiểm tra Base UOM')) + '</small></div>'; var s = $('#im2submit'); if (s) s.textContent = ready ? 'Tạo & hoàn tất' : 'Gửi đúng owner duyệt'; var dm = $('#im2domain'); if (dm && !dm._imBound) { dm._imBound = true; dm.onchange = imSmartRefresh; } }
+    function imSmartRefresh() { var wrap = $('#im2matches'); if (!wrap) return; var cand = imSmartCandidates(); wrap.innerHTML = cand.length ? '<div class="im2matches"><b style="font-size:10.5px">Hệ thống tìm thấy Item có thể dùng lại</b><p>Chọn để không tạo trùng và không sửa BOM.</p>' + cand.map(function (x) { var code = imVal(x, 'Item Code'), sel = IMSMART.item === code; return '<button class="im2match ' + (sel ? 'sel' : '') + '" onclick="imSmartSelect(\'' + esc(code) + '\')"><p><b>' + esc(imVal(x, 'Item Name / Functional Spec')) + '</b><small>' + esc(code) + ' · ' + esc(imVal(x, 'Category Code')) + '</small></p><em>' + (sel ? '✓ Đã chọn' : 'Gắn vào Item này') + '</em></button>'; }).join('') + '</div>' : ''; var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === IMSMART.item; }), domain = $('#im2domain') ? $('#im2domain').value : 'F&B', brand = $('#im2brand') ? $('#im2brand').value.trim() : '', pu = $('#im2pu') ? $('#im2pu').value : '', factor = Number($('#im2factor') ? $('#im2factor').value : 0), base = $('#im2base') ? $('#im2base').value : 'ml', exact = $('#im2exact') && $('#im2exact').checked, ready = !!(it && brand && factor > 0 && !exact && imVal(it, 'Functional UOM') === base && imVal(it, 'Domain') === domain); var p = $('#im2preview'); p.innerHTML = '<h3>⚡ G-ERP tự xử lý</h3><ul><li><span>Category</span><b>' + (it ? esc(imVal(it, 'Category Code')) : 'Tự nhận diện · owner xác nhận') + '</b></li><li><span>Item Code</span><b>' + (it ? 'Dùng lại ' + esc(IMSMART.item) : 'Tự sinh sau khi duyệt') + '</b></li><li><span>Sub Item Code</span><b>Tự sinh theo Item</b></li><li><span>Conversion</span><b>1 ' + esc(pu) + ' = ' + factor.toLocaleString('vi-VN') + ' ' + esc(base) + '</b></li><li><span>Stock policy</span><b>' + (exact ? 'Exact match' : 'FEFO · tự phân bổ') + '</b></li><li><span>Supplier Offer</span><b>Procurement bổ sung nếu cần</b></li></ul><div class="im2decision ' + (ready ? 'ok' : 'warn') + '" style="padding:12px;border-radius:12px;margin-top:12px"><b style="display:flex;align-items:center;gap:6px">' + (ready ? '✅ Đủ điều kiện tự duyệt' : '⚠️ Gửi đúng 1 owner xác nhận') + '</b><small style="margin-top:4px">' + (ready ? 'Dùng Item có sẵn · UOM hợp lệ · policy chuẩn' : (!it ? 'Item mới cần Category Owner xác nhận' : exact ? 'Exact-only cần owner xác nhận' : imVal(it, 'Domain') !== domain ? 'Bộ phận không khớp domain Item' : 'Bổ sung brand hoặc kiểm tra Base UOM')) + '</small></div>'; var s = $('#im2submit'); if (s) s.textContent = ready ? 'Tạo & hoàn tất' : 'Gửi phê duyệt'; var dm = $('#im2domain'); if (dm && !dm._imBound) { dm._imBound = true; dm.onchange = imSmartRefresh; } }
     async function imSmartSubmit() { var name = $('#im2name').value.trim(), brand = $('#im2brand').value.trim(), domain = $('#im2domain').value, pu = $('#im2pu').value, factor = Number($('#im2factor').value), base = $('#im2base').value, supplier = $('#im2supplier').value.trim(), exact = $('#im2exact').checked; if (!name || !brand || !factor || factor <= 0) return toast('Cần nhập tên, brand/model và quy cách hợp lệ', 1); if (['gr', 'ml'].includes(pu.toLowerCase())) return toast('Purchase UOM không được là gr hoặc ml', 1); var it = IMD.items.find(function (x) { return imVal(x, 'Item Code') === IMSMART.item; }); if (it && imVal(it, 'Functional UOM') !== base) return toast('Base UOM phải khớp Functional UOM của Item: ' + imVal(it, 'Functional UOM'), 1); var btn = $('#im2submit'); btn.disabled = true; btn.textContent = 'Đang xử lý…'; var imagePath = null, fi = $('#im2file'); if (fi && fi.files && fi.files[0]) { var file = fi.files[0], path = 'items-mdm/' + Date.now() + '_' + file.name.replace(/[^\w.\-]/g, '_'), up = await sb.storage.from('vendor-docs').upload(path, file); if (up.error) { btn.disabled = false; btn.textContent = 'Thử lại'; return toast('Lỗi tải ảnh: ' + up.error.message, 1); } imagePath = path; } var r = await sb.rpc('mdm_submit_item_intake', { p_requested_name: name, p_domain: domain, p_item_code: IMSMART.item || null, p_brand: brand, p_purchase_uom: pu, p_conversion_factor: factor, p_base_uom: base, p_supplier_note: supplier || null, p_exact_only: exact, p_image_path: imagePath, p_requester: me.email, p_manufacturer: ($('#im2manu') ? $('#im2manu').value.trim() : '') || null }); if (r.error) { btn.disabled = false; btn.textContent = 'Thử lại'; return toast('Chưa chạy migration 0005_smart_intake.sql hoặc lỗi DB: ' + r.error.message, 1); } imSmartClose(); IMD = null; IMREQ = []; await itemMgmtView(); var x = r.data || {}; toast(x.auto_approved ? 'Đã tạo ' + x.sub_item_code + ' và tự duyệt' : 'Đã tạo ' + x.request_no + ' · gửi đúng ' + (x.current_owner || 'owner')); st.itemtab = 'list'; saveSt(); imRender(); }
 
     async function itemsView() {
@@ -8409,22 +8417,22 @@ function imSmartOpen(name, item) { IMSMART = { item: item || '', name: name || '
         <p style="font-size:13px;color:#666;margin-bottom:16px">Chọn 1 trong 3 phương pháp dưới đây để quản lý ảnh cho nhiều mặt hàng cùng lúc.</p>
         
         <div style="display:flex;gap:16px;margin-bottom:16px">
-           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#2b6cb0';this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('bulkImgInput').click(); this.closest('.overlay-bulk').remove()">
-              <div style="font-size:36px;margin-bottom:12px">📁</div>
-              <div style="font-weight:600;color:#2b6cb0;margin-bottom:6px;font-size:15px">Tải tệp ảnh</div>
-              <div style="font-size:12px;color:#666;line-height:1.4">Quét chọn nhiều tệp ảnh (.png, .jpg) có tên trùng Mã Hàng.</div>
+           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" class="img-opt" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background='';this.style.boxShadow='none'" onclick="document.getElementById('bulkImgInput').click(); this.closest('.overlay-bulk').remove()">
+              <div style="width:48px;height:48px;background:#e0f2fe;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 16 4-4 4 4"/></svg></div>
+              <div style="font-weight:600;color:#0369a1;margin-bottom:6px;font-size:15px">Tải tệp ảnh</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.4">Quét chọn nhiều tệp ảnh (.png, .jpg) có tên trùng Mã Hàng.</div>
            </div>
            
-           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#1890ff';this.style.background='#f0f9ff'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('pasteUrlArea').style.display='block';document.getElementById('deleteImgArea').style.display='none';this.style.borderColor='#1890ff';this.style.background='#f0f9ff'">
-              <div style="font-size:36px;margin-bottom:12px">📋</div>
-              <div style="font-weight:600;color:#1890ff;margin-bottom:6px;font-size:15px">Dán URL</div>
-              <div style="font-size:12px;color:#666;line-height:1.4">Copy 2 cột (Mã Hàng & URL) từ Excel dán vào hệ thống.</div>
+           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" class="img-opt" onmouseover="this.style.borderColor='#8b5cf6';this.style.background='#f5f3ff';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background='';this.style.boxShadow='none'" onclick="document.getElementById('pasteUrlArea').style.display='block';document.getElementById('deleteImgArea').style.display='none';this.style.borderColor='#8b5cf6';this.style.background='#f5f3ff';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'">
+              <div style="width:48px;height:48px;background:#ede9fe;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div style="font-weight:600;color:#6d28d9;margin-bottom:6px;font-size:15px">Dán URL</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.4">Copy 2 cột (Mã Hàng & URL) từ Excel dán vào hệ thống.</div>
            </div>
            
-           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#e53e3e';this.style.background='#fff5f5'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background=''" onclick="document.getElementById('deleteImgArea').style.display='block';document.getElementById('pasteUrlArea').style.display='none';this.style.borderColor='#e53e3e';this.style.background='#fff5f5'">
-              <div style="font-size:36px;margin-bottom:12px">🧹</div>
-              <div style="font-weight:600;color:#e53e3e;margin-bottom:6px;font-size:15px">Xóa ảnh loạt</div>
-              <div style="font-size:12px;color:#666;line-height:1.4">Dán danh sách Mã Hàng cần xóa trắng ảnh khỏi hệ thống.</div>
+           <div style="flex:1;border:1px solid #c9cdd4;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s" class="img-opt" onmouseover="this.style.borderColor='#fb7185';this.style.background='#fff1f2';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'" onmouseout="this.style.borderColor='#c9cdd4';this.style.background='';this.style.boxShadow='none'" onclick="document.getElementById('deleteImgArea').style.display='block';document.getElementById('pasteUrlArea').style.display='none';this.style.borderColor='#fb7185';this.style.background='#fff1f2';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'">
+              <div style="width:48px;height:48px;background:#ffe4e6;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#e11d48"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></div>
+              <div style="font-weight:600;color:#be123c;margin-bottom:6px;font-size:15px">Xóa ảnh loạt</div>
+              <div style="font-size:12px;color:#64748b;line-height:1.4">Dán danh sách Mã Hàng cần xóa trắng ảnh khỏi hệ thống.</div>
            </div>
         </div>
         

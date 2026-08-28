@@ -4164,7 +4164,7 @@
       if (!GEMINI_KEY) throw new Error('Chưa có Gemini API key — bấm nút 🔑 Gemini ở góc trên để nhập.');
       const genConfig = { temperature: 0.4, responseMimeType: "application/json" };
       gemStatus('⏳ AI đang đọc' + (attempt > 1 ? ' (thử lại lần ' + attempt + ')' : '') + '…');
-      const ctl = new AbortController(); const tmr = setTimeout(function () { ctl.abort(); }, 60000);
+      const ctl = new AbortController(); const tmr = setTimeout(function () { ctl.abort(); }, 180000);
       let resp;
       try {
         resp = await fetch(`https://generativelanguage.googleapis.com/${GEMINI_API_VER}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`, {
@@ -4184,19 +4184,24 @@
         });
       } catch (e) {
         clearTimeout(tmr);
-        if (e.name === 'AbortError') throw new Error('Gemini phản hồi quá chậm (>60s). Nếu là PDF scan lớn, thử chụp ảnh trang đầu (JPG) rồi dùng ảnh đó.');
+        if (e.name === 'AbortError') throw new Error('Gemini phản hồi quá chậm (>180s). Nếu là PDF scan lớn, thử chụp ảnh trang đầu (JPG) rồi dùng ảnh đó.');
         throw new Error('Không kết nối được Gemini: ' + e.message);
       }
       clearTimeout(tmr);
       if (resp.status === 429 || resp.status === 503) {
-        // Đọc thời gian retry từ lỗi API
         const eData = await resp.json().catch(() => ({}));
         const errMsg = (eData.error && eData.error.message) || '';
-        // Trích xuất số giây từ "Please retry in Xs"
         const retryMatch = errMsg.match(/retry in (\d+(?:\.\d+)?)s/i);
-        const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 30;
+        const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 15;
+        
+        if (attempt < 3) {
+           gemStatus('⏳ AI đang đọc (vượt hạn mức, chờ ' + waitSec + 's thử lại lần ' + (attempt + 1) + ')…');
+           await new Promise(r => setTimeout(r, (waitSec + 1) * 1000));
+           return geminiCall(parts, maxTokens, attempt + 1);
+        }
+        
         gemStatus('');
-        throw new Error('⚠ API key hết lượt dùng tạm thời (rate limit).\n\nChờ ~' + waitSec + 's rồi thử lại, HOẶC:\n→ Bấm nút 🔑 Gemini ở góc trên → nhập key mới → Lưu.');
+        throw new Error('⚠ API key hết lượt dùng tạm thời hoặc máy chủ quá tải.\n\nChờ ~' + waitSec + 's rồi thử lại, HOẶC:\n→ Bấm nút 🔑 Gemini ở góc trên → nhập key mới → Lưu.');
       }
       if (!resp.ok) {
         const e = await resp.json().catch(() => ({}));
@@ -4386,9 +4391,11 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
           let textContent = '';
           workbook.SheetNames.forEach(sheetName => {
             textContent += '--- Sheet: ' + sheetName + ' ---\n';
-            textContent += XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]) + '\n\n';
+            let csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+            csv = csv.replace(/,{2,}/g, ',').replace(/\n+/g, '\n').replace(/,\n/g, '\n');
+            textContent += csv + '\n\n';
           });
-          textContent = textContent.substring(0, 15000);
+          textContent = textContent.trim().substring(0, 15000);
           parts = [{ text: promptText + '\n\nNội dung file đính kèm:\n' + textContent }];
         }
         else if (file.name.match(/\.(docx)$/i)) {
@@ -4551,9 +4558,22 @@ Nếu không đọc được một trường, để giá trị là chuỗi rỗn
       const r = await uploadPendingDoc(form.id);
       if (r.err) return toast(r.err, 1);
       if (!r.done) return;
-      toast(r.isUpdate ? 'Đã cập nhật đè lên hồ sơ cũ' : 'Đã thêm hồ sơ'); await loadAll(); form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); $('#docbody').innerHTML = docRows();
+      toast(r.isUpdate ? 'Đã cập nhật đè lên hồ sơ cũ' : 'Đã thêm hồ sơ'); 
+      await loadAll(); 
+      render();
+      form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); 
+      $('#docbody').innerHTML = docRows();
     }
-    async function rmDoc(id, path) { if (!confirm('Xóa hồ sơ?')) return; await sb.from('vendor_document').delete().eq('id', id); if (path) await sb.storage.from('vendor-docs').remove([path]); toast('Đã xóa hồ sơ'); await loadAll(); form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); $('#docbody').innerHTML = docRows(); }
+    async function rmDoc(id, path) { 
+      if (!confirm('Xóa hồ sơ?')) return; 
+      await sb.from('vendor_document').delete().eq('id', id); 
+      if (path) await sb.storage.from('vendor-docs').remove([path]); 
+      toast('Đã xóa hồ sơ'); 
+      await loadAll(); 
+      render();
+      form = JSON.parse(JSON.stringify(DB.find(x => x.id === form.id))); 
+      $('#docbody').innerHTML = docRows(); 
+    }
     let SAVING = false;
     /* === GIAI ĐOẠN NẠP NCC: true = bỏ qua chặn 'người gửi không tự duyệt' để 1 người duyệt nhanh.
        Nạp xong đổi lại false + chạy 0021_state_guard_ON.sql để khôi phục maker-checker === */
